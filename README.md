@@ -15,7 +15,7 @@ I relied HEAVILY on ChatGPT to get me across both the start AND finish line, and
 Tested on AMD 9950X3D CPU, RTX 4080 Super GPU, 48GB DDR5, Windows 11
 
 
-**Ryfox 1.0a benchmarks
+**Ryfox 1.0.0 benchmarks
 
 Speedometer 3.1: 35.5
 
