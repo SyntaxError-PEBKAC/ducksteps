@@ -1,6 +1,6 @@
 ducksteps for Windows 11
 
-Zen 5 compiled web browser with PGO/LTO for AMD 9950X3D.
+Zen 5 compiled web browser with PGO/LTO for AMD Ryzen 9000, Ryzen AI 300, Threadripper PRO 9000, and Epyc 9005 series CPUs.
 
 Google discontinuing manifest v2 support, combined with oauth2 issues in Chromium forced me to stop using my favorite browser (Chromium_Clang) and make this Firefox fork.
 
@@ -14,7 +14,7 @@ Download links for both the installer and standalone version are on the Releases
 
 **Tested on AMD 9950X3D CPU, RTX 4080 Super GPU, 48GB DDR5, Windows 11
 
-**Ryfox (Now called ducksteps) 1.0.0 benchmarks
+**Version 1.0.0 benchmarks
 - Speedometer 3.1: 35.5
 - Jetstream 2.2: 336.123
 - MotionMark 1.3.1 (1080p 60hz RTX 4080 Super): 2136.29
@@ -37,11 +37,12 @@ https://github.com/mozilla-firefox/firefox
 - Python
 - Chocolatey
 - ccache
-- Firefox ESR(64-bit)
+- Firefox ESR (64-bit)
 
 **Todo List:
 
 - Automate the build, compression, & upload process further.
+- Replace setup/uninstaller icons.
 - Create better icon imageset.
 - Make the duck waddle even faster?
 
