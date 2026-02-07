@@ -1,6 +1,10 @@
 ducksteps for Windows 11
 
-Zen 5 compiled web browser with PGO/LTO for AMD Ryzen 9000, Ryzen AI 300, Threadripper PRO 9000, and Epyc 9005 series CPUs.
+Zen 5 compiled web browser with PGO/LTO for the following CPU series:
+- AMD Ryzen 9000
+- Ryzen AI 300
+- Threadripper PRO 9000
+- Epyc 9005
 
 Google discontinuing manifest v2 support, combined with oauth2 issues in Chromium forced me to stop using my favorite browser (Chromium_Clang) and make this Firefox fork.
 
