@@ -20,7 +20,7 @@ $Config = [ordered]@{
     LogsDir            = 'D:\ducksteps-obj\esr140\dist\logs'
 
     # MozillaBuild bash launcher (used for ./mach commands)
-    MozBuildBash       = 'C:\mozilla-build\msys2\usr\bin\bash.exe'
+    MozBuildBash       = 'D:\\mozilla-build\msys2\usr\bin\bash.exe'
 
     # Tool executables (must already be installed and on this machine)
     SevenZipExe        = 'C:\Program Files\7-Zip\7z.exe'
@@ -450,3 +450,4 @@ catch {
 
     exit 1
 }
+
