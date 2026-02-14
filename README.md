@@ -45,10 +45,11 @@ https://github.com/mozilla-firefox/firefox
 
 **Todo List:
 
-- Automate the build, compression, & upload process further.
+- In progress: Automate the build, compression, & upload process further. 
 - Replace setup/uninstaller icons.
 - Create better icon imageset.
 - Make the duck waddle even faster?
+- Make a seperate version for non-Ryzen 9000 users (famous last words: I mean it's only 2 flags... how hard can it be?!).
 
 
 **Legal Mumbo Jumbo
