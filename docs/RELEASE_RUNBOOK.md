@@ -198,7 +198,7 @@ cd /d/mozilla-source/ducksteps
 git status
 
 # Example tag format 
-  #140.8.0
+  #ducksteps-140.8.0
 
 git tag -a ducksteps-<ver> -m "ducksteps <ver>"
 git push origin ducksteps-<ver>
