@@ -52,7 +52,7 @@ If `MOZ_OBJDIR` still includes old ESR in the path name, either:
 - rename it for clarity before the build (example: `esr141`).
 
 ### 1.4 My known working .mozconfig file for reference purposes as of 28-February-2026:
-
+```
 ac_add_options --enable-application=browser
 ac_add_options --enable-release
 ac_add_options --disable-debug
@@ -70,7 +70,7 @@ ac_add_options --disable-artifact-builds
 # PGO
 ac_add_options MOZ_PGO=1
 
-# Parallelism
+# Parallelism (-1 for all available, or total CPU threads you want to dedicate to the build on your hardware. 32 is max possible for 9950X3D)
 mk_add_options MOZ_MAKE_FLAGS=-j32
 
 # Toolchain
