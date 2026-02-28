@@ -2,7 +2,7 @@
 
 This is the **manual** release process used for ducksteps.
 
-It is written for your current setup:
+It is written for my current setup:
 - Source repo: `D:\mozilla-source\ducksteps`
 - Object directory: `D:\ducksteps-obj\esr140`
 - Shells used: **MozillaBuild (MSYS bash)** + **PowerShell**
@@ -12,12 +12,13 @@ It is written for your current setup:
 
 ## 1) Update to a new Firefox ESR version
 
-You usually do this for:
+I usually do this for:
 - **Monthly ESR security update**
 - **Emergency ESR security release** (out-of-band)
 
 ### 1.1 Pick the target ESR version
 Use Mozilla product details (or ESR release notes) and note the target version (example: `140.8.0`).
+https://product-details.mozilla.org/1.0/firefox_versions.json
 
 ### 1.2 Sync your source tree
 In **MozillaBuild shell**:
@@ -28,11 +29,11 @@ cd /d/mozilla-source/ducksteps
 # Make sure working tree is clean before updating.
 git status
 
-# Pull latest changes from your tracked ESR branch.
+# Pull latest changes from the tracked ESR branch.
 git pull --ff-only
 ```
 
-If you track a specific branch/tag, switch to it first, then pull.
+If I track a specific branch/tag, switch to it first, then pull.
 
 ### 1.3 Verify `.mozconfig` still has your intended options
 Your current important options are:
@@ -70,7 +71,7 @@ cd /d/mozilla-source/ducksteps
 ./mach run
 ```
 
-This opens ducksteps so you can quickly verify it starts.
+This opens ducksteps to quickly verify it starts.
 
 ---
 
@@ -81,7 +82,6 @@ In **MozillaBuild shell**:
 ```bash
 cd /d/mozilla-source/ducksteps
 ./mach package
-./mach installer
 ```
 
 Expected raw outputs:
@@ -94,7 +94,8 @@ Expected raw outputs:
 
 ## 4) Convert standalone package to release `.7z`
 
-Use your existing 7-Zip workflow in **PowerShell** (or 7-Zip GUI).
+Use the existing 7-Zip workflow in **PowerShell** (or 7-Zip GUI).
+- 7z Archive format, 9 - Ultra compression level, * LZMA2 compression method, 3840 MB dictionary size, 273 word size, solid block size, 3 CPU threads.
 
 Goal output file name:
 - `ducksteps-<ver>-Standalone.7z`
@@ -108,7 +109,7 @@ Keep the file in a release staging folder (for example Desktop or a `releases` f
 
 ## 5) Apply UPX to installer (official step)
 
-UPX is part of your official release process and should use maximum compression.
+UPX is part of my official release process and should use maximum compression.
 
 In **PowerShell** (adapt to your exact preferred command):
 
@@ -120,7 +121,7 @@ upx --best --lzma --ultra-brute $dst
 upx -t $dst
 ```
 
-If your installed UPX build does not support `--ultra-brute`, keep your best supported maximum mode (`--best --lzma`) and still run `upx -t`.
+If the installed UPX build does not support `--ultra-brute`, keep the best supported maximum mode (`--best --lzma`) and still run `upx -t`.
 
 Goal output file name:
 - `ducksteps-<ver>-Setup.exe`
@@ -200,16 +201,6 @@ cd /d/mozilla-source/ducksteps
 ./mach configure
 ./mach build
 ./mach package
-./mach installer
-```
-
-If installer outputs look stale, clear installer staging then rebuild:
-
-```bash
-rm -rf /d/ducksteps-obj/esr140/browser/installer
-rm -rf /d/ducksteps-obj/esr140/dist/install
-./mach build browser/installer
-./mach installer
 ```
 
 If the objdir is deeply inconsistent, delete the full objdir and rebuild from configure.
