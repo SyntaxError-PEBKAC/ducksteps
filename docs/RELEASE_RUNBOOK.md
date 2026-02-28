@@ -43,13 +43,51 @@ Your current important options are:
 - `MOZ_PGO=1` (**as `ac_add_options`, not `mk_add_options`**)
 - `--with-branding=browser/branding/ducksteps`
 - `clang-cl` + `lld-link`
-- `export CFLAGS="-march=znver5 -mtune=znver5`
-- `export CXXFLAGS="-march=znver5 -mtune=znver5`
+- `export CFLAGS="-march=znver5 -mtune=znver5"`
+- `export CXXFLAGS="-march=znver5 -mtune=znver5"`
 - `MOZ_OBJDIR=D:/ducksteps-obj/esr140`
 
 If `MOZ_OBJDIR` still includes old ESR in the path name, either:
 - keep it as-is (works technically), or
 - rename it for clarity before the build (example: `esr141`).
+
+### 1.4 My known working .mozconfig file for reference purposes as of 28-February-2026:
+
+ac_add_options --enable-application=browser
+ac_add_options --enable-release
+ac_add_options --disable-debug
+ac_add_options --enable-unified-build
+
+# Optimized build
+ac_add_options --enable-optimize
+
+# Full LTO
+ac_add_options --enable-lto=full
+
+# Full local build (not artifact)
+ac_add_options --disable-artifact-builds
+
+# PGO
+ac_add_options MOZ_PGO=1
+
+# Parallelism
+mk_add_options MOZ_MAKE_FLAGS=-j32
+
+# Toolchain
+export CC=clang-cl
+export CXX=clang-cl
+export LINKER=lld-link
+export HOST_LINKER=lld-link
+
+# Zen 5 tuning
+export CFLAGS="-march=znver5 -mtune=znver5"
+export CXXFLAGS="-march=znver5 -mtune=znver5"
+
+# Objdir
+mk_add_options MOZ_OBJDIR=D:/ducksteps-obj/esr140
+
+# Custom branding directory (relative to topsrcdir)
+ac_add_options --with-branding=browser/branding/ducksteps
 
 ---
 
@@ -147,7 +185,7 @@ Example:
 
 ## 7) Checksum verification
 
-Use 7zip to extract SHA256 checksum or each of the above files and submit both to VirusTotal for scanning.
+Use 7zip to extract SHA256 checksum of each of the above files and submit both to VirusTotal for scanning.
 
 
 ## 8) Version tagging and GitHub release publish
