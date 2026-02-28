@@ -51,7 +51,7 @@ If `MOZ_OBJDIR` still includes old ESR in the path name, either:
 - keep it as-is (works technically), or
 - rename it for clarity before the build (example: `esr141`).
 
-### 1.4 My known working .mozconfig file for reference purposes as of 28-February-2026:
+### 1.4 My .mozconfig known-good baseline for release builds:
 ```
 ac_add_options --enable-application=browser
 ac_add_options --enable-release
