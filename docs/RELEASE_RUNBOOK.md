@@ -43,7 +43,8 @@ Your current important options are:
 - `MOZ_PGO=1` (**as `ac_add_options`, not `mk_add_options`**)
 - `--with-branding=browser/branding/ducksteps`
 - `clang-cl` + `lld-link`
-- Zen 5 C/C++ flags
+- `export CFLAGS="-march=znver5 -mtune=znver5`
+- `export CXXFLAGS="-march=znver5 -mtune=znver5`
 - `MOZ_OBJDIR=D:/ducksteps-obj/esr140`
 
 If `MOZ_OBJDIR` still includes old ESR in the path name, either:
@@ -144,36 +145,40 @@ Example:
 
 ---
 
-## 7) Version tagging and GitHub release publish
+## 7) Checksum verification
 
-## 7.1 Create a git tag for the release
+Use 7zip to extract SHA256 checksum or each of the above files and submit both to VirusTotal for scanning.
+
+
+## 8) Version tagging and GitHub release publish
+
+## 8.1 Create a git tag for the release
 In **MozillaBuild shell** at repo root:
 
 ```bash
 cd /d/mozilla-source/ducksteps
 git status
 
-# Example tag format (choose one and stay consistent):
-# ducksteps-140.8.0
-# v140.8.0-ducksteps
+# Example tag format 
+  #140.8.0
 
 git tag -a ducksteps-<ver> -m "ducksteps <ver>"
 git push origin ducksteps-<ver>
 ```
 
-## 7.2 Publish in GitHub web UI
+## 8.2 Publish in GitHub web UI
 1. Open repo → **Releases** → **Draft a new release**.
 2. Select tag: `ducksteps-<ver>`.
 3. Title example: `ducksteps <ver>`.
 4. Attach:
    - `ducksteps-<ver>-Setup.exe`
    - `ducksteps-<ver>-Standalone.7z`
-5. Add short notes (ESR base version + key changes/fixes).
+5. Add short notes (ESR base version + key changes/fixes, SHA256 checksums and VirusTotal links).
 6. Publish release.
 
 ---
 
-## 8) What good looks like (release checklist)
+## 9) What good looks like (release checklist)
 
 A release is "good" when all checks below pass:
 
@@ -191,7 +196,7 @@ A release is "good" when all checks below pass:
 
 ---
 
-## 9) Fast recovery when something breaks
+## 10) Fast recovery when something breaks
 
 In **MozillaBuild shell**:
 
