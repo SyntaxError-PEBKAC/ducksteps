@@ -88,7 +88,7 @@ mk_add_options MOZ_OBJDIR=D:/ducksteps-obj/esr140
 
 # Custom branding directory (relative to topsrcdir)
 ac_add_options --with-branding=browser/branding/ducksteps
-
+```
 ---
 
 ## 2) Build ducksteps on Windows 11
