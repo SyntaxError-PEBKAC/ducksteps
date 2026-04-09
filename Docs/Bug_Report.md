@@ -7,7 +7,7 @@ assignees: ''
 ---
 
 ## ducksteps version
-<!-- Example: 140.9.1 — found in About ducksteps -->
+Example: 140.9.1 — found in About ducksteps
 
 
 ## Install type
@@ -15,18 +15,18 @@ assignees: ''
 - [ ] Standalone (7z)
 
 ## CPU
-<!-- Must be Zen 5 — Ryzen 9000, Ryzen AI 300, Threadripper PRO 9000, or EPYC 9005. If it's not, ducksteps isn't built for your CPU. -->
+Must be Zen 5 — Ryzen 9000, Ryzen AI 300, Threadripper PRO 9000, or EPYC 9005. If it's not, ducksteps isn't built for your CPU.
 
 
 ## GPU
 
 
 ## OS
-<!-- Windows 11 version + build number — Settings > System > About -->
+Windows 11 version + build number — Settings > System > About
 
 
 ## What happened
-<!-- What you did, what you expected, what actually occurred. -->
+What you did, what you expected, what actually occurred.
 
 
 ## Steps to reproduce
@@ -40,4 +40,4 @@ assignees: ''
 - [ ] Haven't tested
 
 ## Additional context
-<!-- Crash IDs from about:crashes, console errors, screenshots — anything that helps. -->
+Crash IDs from about:crashes, console errors, screenshots — anything that helps.
