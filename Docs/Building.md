@@ -218,6 +218,13 @@ export OBJDIR="D:/ducksteps-obj/esr1XX-Legacy"
 ```
 
 - Re-run steps 11-14 using the following naming convention: ducksteps.1XX.X.X.Legacy.Setup.exe and ducksteps.1XX.X.X.Legacy.Standalone.7z
+- Raw outputs after this step:
+
+| File | Path |
+|---|---|
+| Installer EXE | `D:/ducksteps-obj/esr1XX-Legacy/dist/install/sea/firefox-1XX.X.X.en-US.win64.installer.exe` |
+| Standalone ZIP | `D:/ducksteps-obj/esr1XX-Legacy/dist/firefox-1XX.X.X.en-US.win64.zip` |
+
 ---
 
 ## ☑️ Release checklist
