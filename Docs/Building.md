@@ -143,8 +143,8 @@ Raw outputs after this step:
 
 | File | Path |
 |---|---|
-| Installer EXE | `D:/ducksteps-obj/esr140/dist/install/sea/firefox-1XX.X.X.en-US.win64.installer.exe` |
-| Standalone ZIP | `D:/ducksteps-obj/esr140/dist/firefox-1XX.X.X.en-US.win64.zip` |
+| Installer EXE | `D:/ducksteps-obj/esr1XX/dist/install/sea/firefox-1XX.X.X.en-US.win64.installer.exe` |
+| Standalone ZIP | `D:/ducksteps-obj/esr1XX/dist/firefox-1XX.X.X.en-US.win64.zip` |
 
 ---
 
@@ -195,15 +195,28 @@ Expected false positive pattern: Arctic Wolf and/or Jiangmin flagging Setup.exe 
 ## 🚀 Step 14 — Publish on GitHub
 
 1. Repo → **Releases** → **Draft a new release**
-2. **Choose a tag** → type the new version number (e.g. `140.X.0`) → **Create new tag on publish**
+2. **Choose a tag** → type the new version number (e.g. `1XX.X.X`) → **Create new tag on publish**
 3. Title: follow your release name style (e.g. `⛐ It's the "..." release:`)
 4. Attach both files:
-   - `ducksteps.140.X.0.Setup.exe`
-   - `ducksteps.140.X.0.Standalone.7z`
+   - `ducksteps.1XX.X.X.Setup.exe`
+   - `ducksteps.1XX.X.X.Standalone.7z`
 5. Release notes: include SHA256 hashes and VirusTotal links for both files
 6. Publish — GitHub creates the tag on the default branch at publish time
-7. Changelog: Update Changelog.md in the Repos /Docs/ folder. 
+7. Changelog: Update Changelog.md in the Repos /Docs/ folder.
 
+---
+
+## 💻 Step 15 — Build and Package Skylake Variant
+
+```bash
+export MOZCONFIG=/d/mozilla-source/ducksteps/mozconfig-whl
+export OBJDIR="D:/ducksteps-obj/esr140-whl"
+python mach clobber
+python mach build
+./package.sh
+```
+
+- Re-run steps 11-14 using the following naming convention: ducksteps.1XX.X.X.Legacy.Setup.exe and ducksteps.1XX.X.X.Legacy.Standalone.7z
 ---
 
 ## ☑️ Release checklist
