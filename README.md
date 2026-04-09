@@ -12,8 +12,9 @@ If you're on an older CPU that has AVX2, BMI1, BMI2, FMA, LZCNT, MOVBE, and POPC
 Google killing Manifest V2 support, combined with OAuth2 breakage in Chromium, forced me off my previous browser (Chromium_Clang). Firefox had the best extension compatibility, but the official Windows build leaves a lot of CPU performance on the table. So I built my own.
 ducksteps is compiled with:
 
-🎯 -march=znver5 -mtune=znver5 — Zen 5 instruction set and tuning, not a generic x86-64 baseline
-      -march=skylake -mtune=skylake — AVX2 instruction set and tuning, (also) not a generic x86-64 baseline
+🎯 `-march=znver5 -mtune=znver5 — Zen 5 instruction set and tuning, not a generic x86-64 baseline`
+
+`-march=skylake -mtune=skylake — AVX2 instruction set and tuning, (also) not a generic x86-64 baseline`
 
 🔗 Full LTO — link-time optimization across the entire binary
 
