@@ -3,7 +3,7 @@
 **Environment:**
 - MozillaBuild shell: `D:\mozilla-build\start-shell.bat`
 - Source: `D:\mozilla-source\ducksteps`
-- Objdir: `D:\ducksteps-obj\esr140`
+- Objdir: `D:\ducksteps-obj\esr1XX`
 - rcedit: `C:\Users\User\.mozbuild\rcedit\rcedit-x64.exe`
 - `package.sh`: `D:\mozilla-source\ducksteps\package.sh`
 
@@ -34,10 +34,10 @@ git fetch --tags origin
 ## 🏷️ Step 4 — Find the new release tag
 
 ```bash
-git tag -l "FIREFOX_140*esr*RELEASE"
+git tag -l "FIREFOX_1XX*esr*RELEASE"
 ```
 
-You're looking for a tag in the format `FIREFOX_140_X_0esr_RELEASE` where X is the new point release.
+You're looking for a tag in the format `FIREFOX_1XX_X_0esr_RELEASE` where X is the new point release.
 
 If the tag isn't listed, the release hasn't been tagged upstream yet. Do not proceed until it appears.
 
@@ -46,14 +46,14 @@ If the tag isn't listed, the release hasn't been tagged upstream yet. Do not pro
 ## 🌿 Step 5 — Switch to your local branch
 
 ```bash
-git checkout esr140
+git checkout esr1XX
 ```
 
 Expected output includes:
 
 ```
-Switched to branch 'esr140'
-Your branch and 'origin/esr140' have diverged...
+Switched to branch 'esr1XX'
+Your branch and 'origin/esr1XX' have diverged...
 ```
 
 This is normal. Do **not** run `git pull` — it will destroy your local patchset on a diverged branch.
@@ -62,10 +62,10 @@ This is normal. Do **not** run `git pull` — it will destroy your local patchse
 
 ## 🔀 Step 6 — Rebase your patchset onto the new release tag
 
-Replace `FIREFOX_140_X_0esr_RELEASE` with the actual tag from Step 4.
+Replace `FIREFOX_1XX_X_0esr_RELEASE` with the actual tag from Step 4.
 
 ```bash
-git rebase FIREFOX_140_X_0esr_RELEASE
+git rebase FIREFOX_1XX_X_0esr_RELEASE
 ```
 
 If you hit a conflict, git pauses and tells you which file. Resolve it, then:
@@ -154,7 +154,7 @@ UPX compression on the 7-zip SFX stub runs automatically during `python mach pac
 Confirm it ran cleanly:
 
 ```bash
-upx -t /d/ducksteps-obj/esr140/dist/install/sea/firefox-*.win64.installer.exe
+upx -t /d/ducksteps-obj/esr1XX/dist/install/sea/firefox-*.win64.installer.exe
 ```
 
 Expected output: `[OK]`. If it fails, re-run `./package.sh`.
@@ -210,7 +210,7 @@ Expected false positive pattern: Arctic Wolf and/or Jiangmin flagging Setup.exe 
 
 ```bash
 export MOZCONFIG=/d/mozilla-source/ducksteps/.mozconfig-Legacy
-export OBJDIR="D:/ducksteps-obj/esr140-Legacy"
+export OBJDIR="D:/ducksteps-obj/esr1XX-Legacy"
 ./mach clobber
 ./mach build
 ./package.sh
@@ -235,7 +235,7 @@ export OBJDIR="D:/ducksteps-obj/esr140-Legacy"
 ## 📝 Notes
 
 - **Do not use `git pull` at any point** in this workflow — your branch diverges from upstream intentionally.
-- **Detached HEAD warnings** from git are harmless. The rebase workflow keeps you on `esr140`.
+- **Detached HEAD warnings** from git are harmless. The rebase workflow keeps you on `esr1XX`.
 - **NSIS warnings 6010, 6012, 9000** during packaging are pre-existing upstream. Harmless, appear in every Firefox build.
 - **`rcedit-x64.exe`** is correct for win64 builds. The x86 binary in the same folder is unused.
 - **`instrumented/`** in the objdir is the PGO training build. Never distribute from it.
