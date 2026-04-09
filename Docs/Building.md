@@ -209,8 +209,8 @@ Expected false positive pattern: Arctic Wolf and/or Jiangmin flagging Setup.exe 
 ## 💻 Step 15 — Build and Package Skylake Variant
 
 ```bash
-export MOZCONFIG=/d/mozilla-source/ducksteps/mozconfig-whl
-export OBJDIR="D:/ducksteps-obj/esr140-whl"
+export MOZCONFIG=/d/mozilla-source/ducksteps/mozconfig-sky
+export OBJDIR="D:/ducksteps-obj/esr140-sky"
 python mach clobber
 python mach build
 ./package.sh
