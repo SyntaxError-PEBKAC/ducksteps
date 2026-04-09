@@ -20,7 +20,7 @@
   - Pairs well with LTO/PGO for stronger whole-program results
   - Can improve consistency (fewer edge-case slowdowns from suboptimal linking)
 
-- 🎯 **Zen 5 tuning (`-march=znver5 -mtune=znver5`)**
+- 🎯 **Custom CPU tuning (`-march=znver5 -mtune=znver5` or `-march=skylake -mtune=skylake`)**
   - Generates CPU-specific code instead of “one-size-fits-all”
   - Can boost performance on CPU-heavy browsing (script-heavy sites, layout)
   - Better throughput can mean less hitching under multitasking
