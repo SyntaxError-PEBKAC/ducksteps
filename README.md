@@ -1,56 +1,79 @@
-ducksteps for Windows 11
+# 🦆 ducksteps
 
-Zen 5 compiled web browser with PGO/LTO for the following CPU series:
-- AMD Ryzen 9000
-- Ryzen AI 300
-- Threadripper PRO 9000
-- Epyc 9005
+A custom Windows build of Firefox ESR, compiled from source with Zen 5 CPU tuning, full LTO, and PGO enabled.
 
-Google discontinuing manifest v2 support, combined with oauth2 issues in Chromium forced me to stop using my favorite browser (Chromium_Clang) and make this Firefox fork.
+If you're running a Ryzen 9000, Ryzen AI 300, Threadripper PRO 9000, or EPYC 9005 and you want a browser that actually uses your hardware — this is it.
 
-This is the first thing I have ever compiled in to something I could share, and I am EXTREMELY inexperienced. Starting with a web browser might not have been the best "Hello World" project, but I really wanted a browser that fully utilized my 9950X3D CPU in Windows and I hope that is what I am accomplishing.
+---
 
-I relied HEAVILY on ChatGPT to get me across both the start AND finish line, and would welcome human advice if there's something I messed up on.
+## Why ducksteps exists
 
-Download links for both the installer and standalone version are on the Releases page (right side of screen).
+Google killing Manifest V2 support, combined with OAuth2 breakage in Chromium, forced me off my previous browser (Chromium_Clang). Firefox had the best extension compatibility, but the official Windows build leaves a lot of CPU performance on the table. So I built my own.
 
-***Nerdy notes:
+ducksteps is compiled with:
+- **`-march=znver5 -mtune=znver5`** — Zen 5 instruction set and tuning, not a generic x86-64 baseline
+- **Full LTO** — link-time optimization across the entire binary
+- **PGO** — profile-guided optimization trained on real browsing workloads
+- **clang-cl / lld-link** — LLVM toolchain throughout, no MSVC codegen
 
-**Tested on AMD 9950X3D CPU, RTX 4080 Super GPU, 48GB DDR5, Windows 11
+The result is a browser that benchmarks noticeably higher than the official release on the same hardware.
 
-**Version 1.0.0 benchmarks
-- Speedometer 3.1: 35.5
-- Jetstream 2.2: 336.123
-- MotionMark 1.3.1 (1080p 60hz RTX 4080 Super): 2136.29
-- https://thorium.rocks/misc/Speedometer_2.1 : 624
+---
 
-**I DON'T KNOW WHAT I AM DOING!!! Here's my full ChatGPT source for proof:
-- https://chatgpt.com/share/693857f1-d584-8013-a456-19b86473cba1
+## Requirements
 
-**Sourcebase:
-https://github.com/mozilla-firefox/firefox
+- **OS:** Windows 11 (64-bit)
+- **CPU:** AMD Zen 5 architecture — the build will *run* on other x86-64 CPUs but will likely crash or behave incorrectly due to the `-march=znver5` flag generating instructions older CPUs don't support
+  - ✅ Ryzen 9000 series (9600X, 9700X, 9900X, 9950X, 9950X3D, etc.)
+  - ✅ Ryzen AI 300 series
+  - ✅ Threadripper PRO 9000 series
+  - ✅ EPYC 9005 series
+- **GPU:** Any — tested on RTX 4080 Super
 
-**Build & Test Tools:
-- Windows 11
-- Mozilla Build
-- Git
-- LLVM
-- Vulkan SDK
-- Visual Studio 2022 Build Tools
-- Rustup
-- Python
-- Chocolatey
-- ccache
-- Firefox ESR (64-bit)
+---
 
-**Todo List:
+## Download
 
-- In progress: Automate the build, compression, & upload process further. 
-- Replace setup/uninstaller icons.
-- Create better icon imageset.
-- Make the duck waddle even faster?
-- Make a seperate version for non-Ryzen 9000 users (famous last words: I mean it's only 2 flags... how hard can it be?!).
+Grab the installer or standalone ZIP from the **[Releases page](https://github.com/SyntaxError-PEBKAC/ducksteps/releases)**.
 
+| File | Notes |
+|---|---|
+| `ducksteps.X.X.X.Setup.exe` | Installer — installs like a normal app |
+| `ducksteps.X.X.X.Standalone.7z` | Portable — extract and run, no installation |
 
-**Legal Mumbo Jumbo
-- ducksteps is an unofficial build. “Firefox” and Mozilla logos are Mozilla trademarks; ducksteps is not affiliated with or endorsed by Mozilla.
+SHA256 hashes and VirusTotal results are included with every release. AV flags from Jiangmin are a known false positive caused by aggressive 7zip compression settings — not malware.
+
+---
+
+## Benchmarks
+
+Tested on AMD 9950X3D / RTX 4080 Super / 48GB DDR5 / Windows 11 @ 1080p 60Hz.
+
+| Benchmark | Score |
+|---|---|
+| Speedometer 3.1 | 35.5 |
+| JetStream 2.2 | 336.123 |
+| MotionMark 1.3.1 | 2136.29 |
+| Speedometer 2.1 | 624 |
+
+---
+
+## Build configuration
+
+`.mozconfig` and the full build runbook are in [`/docs`](./docs/).
+
+Key flags: `--enable-lto=full`, `MOZ_PGO=1`, `-march=znver5 -mtune=znver5`, `clang-cl`, `lld-link`.
+
+---
+
+## Legal
+
+ducksteps is an unofficial build. "Firefox" and the Firefox logo are trademarks of Mozilla. ducksteps is not affiliated with or endorsed by Mozilla. Source: [mozilla-firefox/firefox](https://github.com/mozilla-firefox/firefox). Licensed under [MPL 2.0](./LICENSE).
+
+---
+
+## Honest notes
+
+This is the first thing I've ever compiled into something I could share, and I am extremely inexperienced. Starting with a web browser was probably not the smartest "Hello World" project, but I wanted a browser that fully utilized my 9950X3D and this is what I ended up with.
+
+I relied heavily on ChatGPT to get across both the start and finish line. Human feedback is always welcome — open an issue or hit the Discussions tab.
