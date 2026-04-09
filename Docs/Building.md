@@ -202,6 +202,7 @@ Expected false positive pattern: Arctic Wolf and/or Jiangmin flagging Setup.exe 
    - `ducksteps.140.X.0.Standalone.7z`
 5. Release notes: include SHA256 hashes and VirusTotal links for both files
 6. Publish — GitHub creates the tag on the default branch at publish time
+7. Changelog: Update Changelog.md in the Repos /Docs/ folder. 
 
 ---
 
