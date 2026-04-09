@@ -4,8 +4,9 @@
 - MozillaBuild shell: `D:\mozilla-build\start-shell.bat`
 - Source: `D:\mozilla-source\ducksteps`
 - Objdir: `D:\ducksteps-obj\esr1XX`
+- Legacy Objdir: `D:\ducksteps-obj\esr1XX-Legacy`
 - rcedit: `C:\Users\User\.mozbuild\rcedit\rcedit-x64.exe`
-- `package.sh`: `D:\mozilla-source\ducksteps\package.sh`
+- package.sh: `D:\mozilla-source\ducksteps\package.sh`
 
 ---
 
