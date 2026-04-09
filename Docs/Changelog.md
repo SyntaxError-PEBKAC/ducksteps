@@ -5,9 +5,14 @@ All releases of ducksteps. Newest first.
 ---
 
 ## [140.9.1] — 2026-04-09
-⛐ It's the "security patch, no drama" release:
+⛐ It's the "security patch, everyone's welcome!" release:
 
-🔄  Updated to Firefox ESR 140.9.1. No build system changes, no new flags — just Mozilla patching things that needed patching.
+🔄  Updated to Firefox ESR 140.9.1. Just Mozilla patching things that needed patching.
+
+🍾 First Skylake and newer release! Download the Legacy version if you don't have a AMD Zen 5 CPU. This build is compiled with:
+-march=skylake -mtune=skylake
+It requires a CPU with AVX2, BMI1, BMI2, FMA, LZCNT, MOVBE, and POPCNT support.
+In practice that covers most Intel chips from Broadwell (2014) onward and most AMD chips from Excavator (2015) onward.
 
 🛡️  Addressed three high-severity CVEs from Mozilla Foundation Security Advisory 2026-27 (April 7, 2026): CVE-2026-5732 (integer overflow in text rendering), CVE-2026-5731 (memory safety bugs shared across ESR 115.34.0/140.9.0/Firefox 149.0.1), and CVE-2026-5734 (memory safety bugs in ESR 140.9.0/Firefox 149.0.1). Two of the three showed evidence of memory corruption with plausible RCE potential.
 
@@ -17,6 +22,10 @@ SHA256:
 - `ducksteps.140.9.1.Setup.exe` — `32903e15b7d1e73574ad2651c930dbfc416dd666679a45dd5b77f857ea24e339`
 
 - `ducksteps.140.9.1.Standalone.7z` — `2375250417db5f06e95efe52b93fbd5e731e95999954f3791ee8ce37aa5e587c`
+
+- `ducksteps.140.9.1.Legacy.Setup.exe` — `d6c75db6bf335415f1eb9739f38e9237aff6f44fe201e13ed8a4dc09880e987c`
+
+- `ducksteps.140.9.1.Legacy.Standalone.7z` — `7bceef55162137a4fef292e41c2153f1aa223bc1242fc08f4dddb7610baeffc8`
 
 ---
 
