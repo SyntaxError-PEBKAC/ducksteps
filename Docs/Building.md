@@ -214,7 +214,7 @@ export MOZCONFIG=/d/mozilla-source/ducksteps/.mozconfig-Legacy
 export OBJDIR="D:/ducksteps-obj/esr1XX-Legacy"
 ./mach clobber
 ./mach build
-./package.sh
+./mach package
 ```
 
 - Re-run steps 11-14 using the following naming convention: ducksteps.1XX.X.X.Legacy.Setup.exe and ducksteps.1XX.X.X.Legacy.Standalone.7z
