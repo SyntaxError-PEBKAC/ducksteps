@@ -211,8 +211,8 @@ Expected false positive pattern: Arctic Wolf and/or Jiangmin flagging Setup.exe 
 ```bash
 export MOZCONFIG=/d/mozilla-source/ducksteps/mozconfig-sky
 export OBJDIR="D:/ducksteps-obj/esr140-sky"
-python mach clobber
-python mach build
+./mach clobber
+./mach build
 ./package.sh
 ```
 
