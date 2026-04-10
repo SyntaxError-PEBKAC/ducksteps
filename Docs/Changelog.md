@@ -19,9 +19,9 @@ In practice that covers most Intel chips from Broadwell (2014) onward and most A
 🚨  VirusTotal: two flags (Arctic Wolf, Jiangmin) on Setup.exe — same compression heuristic suspects as always. Standalone clean.
 
 SHA256:
-- `ducksteps.140.9.1.Setup.exe` — `32903e15b7d1e73574ad2651c930dbfc416dd666679a45dd5b77f857ea24e339`
+- `ducksteps.140.9.1.Setup.exe` — `e53c8b909053044e5684b30c61709560d9b7a9ec1ae49637cda90d9b68f58916`
 
-- `ducksteps.140.9.1.Standalone.7z` — `2375250417db5f06e95efe52b93fbd5e731e95999954f3791ee8ce37aa5e587c`
+- `ducksteps.140.9.1.Standalone.7z` — `a3c4a12d6ce798280faf032fb9d261d3e97c551d6e00d24ea241e84f1ae7c7c0`
 
 - `ducksteps.140.9.1.Legacy.Setup.exe` — `d6c75db6bf335415f1eb9739f38e9237aff6f44fe201e13ed8a4dc09880e987c`
 
