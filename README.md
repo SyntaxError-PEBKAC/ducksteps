@@ -1,6 +1,6 @@
 🦆 ducksteps
 
-A custom Windows build of Firefox ESR, compiled from source with Zen 5 CPU tuning, full LTO, and PGO enabled. Now with builds for nearly everyone!
+A custom Windows build of Firefox ESR, compiled from source with Zen 5 or AVX2 CPU tuning, full LTO, and PGO enabled.
 
 If you're running a Ryzen 9000, Ryzen AI 300, Threadripper PRO 9000, or EPYC 9005 and you want a browser that actually uses your hardware — this is it.
 
@@ -59,26 +59,6 @@ Grab the correct installer or standalone ZIP from the Releases page.
 SHA256 hashes and VirusTotal results are included with every release.
 
 AV flags from Jiangmin are a known false positive caused by aggressive 7zip compression settings — not malware.
-
----
-🏁 Benchmarks
-
-Tested on AMD 9950X3D / RTX 4080 Super / 48GB DDR5 / Windows 11 @ 1080p 60Hz.
-
-BenchmarkScores:
-
-Speedometer 3.135.5
-
-JetStream 2.2336.123
-
-MotionMark 1.3.12136.29
-
-Speedometer 2.1624
-
----
-🔧 Build configuration
-
-.mozconfig, .mozconfig-sky and the full build runbook are in /docs.
 
 ---
 ⚖️ Legal
