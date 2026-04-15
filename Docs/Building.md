@@ -225,6 +225,11 @@ export OBJDIR="D:/ducksteps-obj/esr1XX-Legacy"
 | Installer EXE | `D:/ducksteps-obj/esr1XX-Legacy/dist/install/sea/firefox-1XX.X.X.en-US.win64.installer.exe` |
 | Standalone ZIP | `D:/ducksteps-obj/esr1XX-Legacy/dist/firefox-1XX.X.X.en-US.win64.zip` |
 
+- To revert to zen5 building ( change 1XX info):
+```
+export MOZCONFIG=/d/mozilla-source/ducksteps/.mozconfig
+export OBJDIR="D:/ducksteps-obj/esr1XX"
+```
 ---
 
 ## ☑️ Release checklist
