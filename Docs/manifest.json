@@ -1,0 +1,19 @@
+{
+  "manifest_version": 2,
+  "name": "ducksteps PGO Training",
+  "version": "1.0",
+  "description": "Custom PGO training workload for ducksteps builds",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "pgo_training@ducksteps"
+    }
+  },
+  "permissions": [
+    "tabs",
+	"storage",
+    "<all_urls>"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  }
+}
