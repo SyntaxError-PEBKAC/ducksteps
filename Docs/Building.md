@@ -123,7 +123,7 @@ Build is complete when you see:
 your build finally finished successfully!
 ```
 
-Next run:
+Next test the browser built successfully by running:
 
 ```bash
 ./mach run
