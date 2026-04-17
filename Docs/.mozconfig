@@ -1,35 +1,22 @@
-ac_add_options --enable-application=browser
-ac_add_options --enable-release
-ac_add_options --disable-debug
-ac_add_options --enable-unified-build
-
-# Optimized build
-ac_add_options --enable-optimize
-
-# Full LTO
-ac_add_options --enable-lto=full
-
-# Full local build (not artifact)
-ac_add_options --disable-artifact-builds
-
-# PGO
-ac_add_options MOZ_PGO=1
-
-# Parallelism
-mk_add_options MOZ_MAKE_FLAGS=-j32
-
-# Toolchain
+mk_add_options MOZ_OBJDIR=D:/ducksteps-obj/esr140
 export CC=clang-cl
 export CXX=clang-cl
 export LINKER=lld-link
 export HOST_LINKER=lld-link
-
-# Zen 5 tuning
 export CFLAGS="-march=znver5 -mtune=znver5"
 export CXXFLAGS="-march=znver5 -mtune=znver5"
-
-# Objdir
-mk_add_options MOZ_OBJDIR=D:/ducksteps-obj/esr140
-
-# Custom branding directory (relative to topsrcdir)
+export RUSTFLAGS="-C target-cpu=znver5 -C opt-level=3"
+ac_add_options --enable-application=browser
 ac_add_options --with-branding=browser/branding/ducksteps
+ac_add_options --enable-release
+ac_add_options --disable-debug
+ac_add_options --enable-unified-build
+ac_add_options --enable-optimize
+ac_add_options --enable-lto=full
+ac_add_options --disable-artifact-builds
+ac_add_options --disable-updater
+ac_add_options --disable-maintenance-service
+ac_add_options --disable-default-browser-agent
+ac_add_options --disable-crashreporter
+ac_add_options MOZ_PGO=1
+mk_add_options MOZ_MAKE_FLAGS=-j32
