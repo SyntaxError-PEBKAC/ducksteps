@@ -98,17 +98,17 @@ If either file shows the old version number, stop. The rebase didn't land correc
 ## 🧹 Step 8 — Clobber
 
 ```bash
-python mach clobber
+./ mach clobber
 ```
 
 Safe default for all release builds. Avoids stale outputs from the previous build.
 
 ---
 
-## 🔨 Step 9 — Build
+## 🔨 Step 9 — Build & Test
 
 ```bash
-python mach build
+./mach build
 ```
 
 This will take a long time. The PGO flow runs automatically:
@@ -121,6 +121,12 @@ Build is complete when you see:
 
 ```
 your build finally finished successfully!
+```
+
+Next run:
+
+```bash
+./mach run
 ```
 
 Do not distribute anything from the `instrumented/` folder in the objdir — that's the PGO training binary, not the final build.
@@ -136,7 +142,7 @@ Do not distribute anything from the `instrumented/` folder in the objdir — tha
 This does two things in order:
 
 1. Stamps the ducksteps icon onto the NSIS stub via `rcedit-x64.exe` **before** mach package runs. (rcedit truncates anything past the PE boundary — running it post-assembly destroys the installer.)
-2. Calls `python mach package`, which appends the 7z payload to the already-stamped stub.
+2. Calls `./ mach package`, which appends the 7z payload to the already-stamped stub.
 
 **Sanity check:** The installer EXE should be approximately 72 MB. If it's under 1 MB, the icon stamping corrupted it — re-run `./package.sh`.
 
@@ -151,7 +157,7 @@ Raw outputs after this step:
 
 ## 🗜️ Step 11 — Verify UPX ran
 
-UPX compression on the 7-zip SFX stub runs automatically during `python mach package`.
+UPX compression on the 7-zip SFX stub runs automatically during `./ mach package`.
 Confirm it ran cleanly:
 
 ```bash
@@ -214,6 +220,7 @@ export MOZCONFIG=/d/mozilla-source/ducksteps/.mozconfig-Legacy
 export OBJDIR="D:/ducksteps-obj/esr1XX-Legacy"
 ./mach clobber
 ./mach build
+./mach run
 ./mach package
 ```
 
