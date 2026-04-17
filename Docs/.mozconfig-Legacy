@@ -1,22 +1,22 @@
+mk_add_options MOZ_OBJDIR=D:/ducksteps-obj/esr140-Legacy
+export CC=clang-cl
+export CXX=clang-cl
+export LINKER=lld-link
+export HOST_LINKER=lld-link
+export CFLAGS="-march=x86-64-v3 -mtune=generic"
+export CXXFLAGS="-march=x86-64-v3 -mtune=generic"
+export RUSTFLAGS="-C target-cpu=haswell -C opt-level=3"
 ac_add_options --enable-application=browser
+ac_add_options --with-branding=browser/branding/ducksteps
 ac_add_options --enable-release
 ac_add_options --disable-debug
 ac_add_options --enable-unified-build
 ac_add_options --enable-optimize
 ac_add_options --enable-lto=full
 ac_add_options --disable-artifact-builds
+ac_add_options --disable-updater
+ac_add_options --disable-maintenance-service
+ac_add_options --disable-default-browser-agent
+ac_add_options --disable-crashreporter
 ac_add_options MOZ_PGO=1
 mk_add_options MOZ_MAKE_FLAGS=-j32
-
-export CC=clang-cl
-export CXX=clang-cl
-export LINKER=lld-link
-export HOST_LINKER=lld-link
-
-# Skylake Tuning
-export CFLAGS="-march=skylake -mtune=skylake"
-export CXXFLAGS="-march=skylake -mtune=skylake"
-
-mk_add_options MOZ_OBJDIR=D:/ducksteps-obj/esr140-Legacy   # sibling, same structure
-
-ac_add_options --with-branding=browser/branding/ducksteps
