@@ -38,7 +38,7 @@ CPU: AMD Zen 5 architecture:
 
 ✅ EPYC 9005 series
 
-🖳 AVX2 `Legacy` Version now available for most CPUs made in 2014 or later.
+🖳 AVX2 `Legacy` Version now available for most CPUs made around 2013-15 or later.
 
 GPU: Any — tested on RTX 4080 Super
 
