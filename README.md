@@ -2,9 +2,9 @@
 
 A custom Windows build of Firefox ESR, compiled from source with Zen 5 or AVX2 CPU tuning, full LTO, and PGO enabled.
 
-If you're running a Ryzen 9000, Ryzen AI 300, Threadripper PRO 9000, or EPYC 9005 and you want a browser that actually uses your hardware — this is it.
+If you're running a Ryzen 9000 series, Ryzen AI 300 series, Threadripper PRO 9000 series, or EPYC 9005 series — this build is compiled specifically for your silicon. Zen 5 only; no Intel equivalent exists.
 
-If you're on an older CPU that has AVX2, BMI1, BMI2, FMA, LZCNT, MOVBE, and POPCNT support download the LEGACY version. That covers most Intel chips from Broadwell (2014) onward and most AMD chips from Excavator (2015) onward! Welcome to the party AVX2 users!
+If your CPU has AVX2, BMI1, BMI2, FMA, LZCNT, MOVBE, and POPCNT — download the Legacy version. In practice: most Intel chips from Haswell (2013) onward and most AMD chips from Excavator (2015) onward qualify. If you're unsure, check your CPU specs against that feature list before downloading.
 
 ---
 🤔 Why ducksteps exists
