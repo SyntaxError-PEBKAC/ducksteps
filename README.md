@@ -13,12 +13,12 @@ Google killing Manifest V2 support, combined with OAuth2 breakage in Chromium, f
 ducksteps is compiled with:
 
 🎯 `-march=znver5 -mtune=znver5 — Zen 5 instruction set and tuning, not a generic x86-64 baseline`
-
+OR
 `-march=skylake -mtune=skylake — AVX2 instruction set and tuning, (also) not a generic x86-64 baseline`
 
 🔗 Full LTO — link-time optimization across the entire binary
 
-🧠 PGO — profile-guided optimization trained on real browsing workloads
+🧠 PGO — profile-guided optimization trained on 80+ real browsing workloads
 
 🦾 clang-cl / lld-link — LLVM toolchain throughout, no MSVC codegen
 
