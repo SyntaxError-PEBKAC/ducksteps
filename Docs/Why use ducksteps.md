@@ -15,7 +15,7 @@ Here's what changed and why it matters:
 - 🧪 **PGO (Profile-Guided Optimization) (`MOZ_PGO=1`)**  
   Before the final build compiles, Firefox runs a training session. It browses real websites and records which code runs most often. The compiler uses that data to make *those specific paths* as fast as possible. Faster startup, smoother tab switching, less hitching on page load.
 
-- 🏋️ **Custom PGO training corpus (87 sites, ~112 minutes)**  
+- 🏋️ **Custom PGO training corpus (80+ sites, ~112 minutes)**  
   Stock Firefox trains PGO on a generic Mozilla workload. ducksteps trains on 80+ real websites — including YouTube, Reddit, news sites, maps, e-commerce, and speed tests — with realistic scroll behavior, video playback, and SPA navigation simulated automatically. Better training data means the optimization is tuned to how browsers actually get used, not a lab benchmark. ducksteps is the result of multiple refinement iterations with timing improvements from live monitoring of previous runs.
 
 - 🛠️ **Clang toolchain + LLD linker (`clang-cl`, `lld-link`)**  
