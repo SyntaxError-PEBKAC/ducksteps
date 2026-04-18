@@ -15,8 +15,8 @@ Example: 140.9.1 — found in About ducksteps
 - [ ] Standalone (7z)
 
 ## CPU
-Must be Zen 5 — Ryzen 9000, Ryzen AI 300, Threadripper PRO 9000, or EPYC 9005. If it's not, ducksteps isn't built for your CPU.
-
+For Zen5 build: Must be — Ryzen 9000, Ryzen AI 300, Threadripper PRO 9000, or EPYC 9005. If it's not, Zen5 ducksteps isn't built for your CPU.
+For AVX2 build: Must have AVX2, BMI1, BMI2, FMA, LZCNT, MOVBE, and POPCNT support.
 
 ## GPU
 
