@@ -8,9 +8,11 @@ A custom Windows build of Firefox ESR, compiled from source with Zen 5 or AVX2 C
 Google killing Manifest V2 support, combined with OAuth2 breakage in Chromium, forced me off my previous browser (Chromium_Clang). Firefox had the best extension compatibility, but the official Windows build leaves a lot of CPU performance on the table. So I built my own.
 ducksteps is compiled with:
 
-🎯 `-march=znver5 -mtune=znver5 — Zen 5 instruction set and tuning, not a generic x86-64 baseline`
+🎯 `-march=znver5 -mtune=znver5` — Zen 5 instruction set and tuning, not a generic x86-64 baseline
+
 OR
-`-march=skylake -mtune=skylake — AVX2 instruction set and tuning, (also) not a generic x86-64 baseline`
+
+`-march=x86-64-v3 -mtune=generic` — AVX2 instruction set and tuning, (also) not a generic x86-64 baseline
 
 🔗 Full LTO — link-time optimization across the entire binary
 
