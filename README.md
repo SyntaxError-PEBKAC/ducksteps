@@ -1,6 +1,6 @@
 🦆 ducksteps
 
-A custom Windows build of Firefox ESR, compiled from source with Zen 5 or AVX2 CPU tuning, full LTO, and PGO enabled.
+A custom Windows build of Firefox ESR, compiled from source with Zen 5 or AVX2 CPU tuning, full LTO, and tuned PGO enabled.
 
 ---
 🤔 Why ducksteps exists
