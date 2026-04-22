@@ -166,6 +166,11 @@ upx -t /d/ducksteps-obj/esr1XX/dist/install/sea/firefox-*.win64.installer.exe
 
 Expected output: `[OK]`. If it fails, re-run `./package.sh`.
 
+**Post-rebase patch — exe_7z_archive.py UPX flags:**
+File: `python/mozbuild/mozbuild/action/exe_7z_archive.py`
+Remove `--best`, `--lzma`, `--ultra-brute` from the UPX cmd list. Replace with `-6` only.
+Without this, UPX 5.x triggers 4-6 VirusTotal flags on Setup.exe.
+
 ---
 
 ## 7️⃣ Step 12 — Repack standalone as 7z
@@ -247,7 +252,7 @@ export OBJDIR="D:/ducksteps-obj/esr1XX"
 - [ ] `package.sh` completed and installer is ~72 MB (not under 1 MB)
 - [ ] `upx -t` returned `[OK]` on the Setup.exe
 - [ ] Both files checksummed and submitted to VirusTotal
-- [ ] VirusTotal flags are only the expected false positives (Arctic Wolf / Jiangmin)
+- [ ] exe_7z_archive.py UPX patch applied (check after every rebase)
 - [ ] Release notes include SHA256 hashes and VirusTotal links for both files
 
 ---
