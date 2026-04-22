@@ -60,8 +60,6 @@ Grab the correct installer or standalone ZIP from the Releases page.
 
 SHA256 hashes and VirusTotal results are included with every release.
 
-AV flags from Jiangmin are a known false positive caused by aggressive 7zip compression settings — not malware.
-
 ---
 ⚖️ Legal
 
