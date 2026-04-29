@@ -110,7 +110,7 @@ If either file shows the old version number, stop. The rebase didn't land correc
 ## 🧹 Step 8 — Clobber
 
 ```bash
-./ mach clobber
+./mach clobber
 ```
 
 Safe default for all release builds. Avoids stale outputs from the previous build.
