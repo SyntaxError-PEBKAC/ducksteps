@@ -75,6 +75,18 @@ If you hit a conflict, git pauses and tells you which file. Resolve it, then:
 git rebase --continue
 ```
 
+> ⚠️ **Version-bump conflict:** Your patchset includes a manual version-bump commit
+> from the previous release. When rebasing onto a new upstream tag, git will conflict
+> on `browser/config/version.txt`, `browser/config/version_display.txt`, and
+> `config/milestone.txt` because upstream already carries the correct new version.
+>
+> This is expected. Run:
+> ```bash
+> git rebase --skip
+> ```
+> This discards your stale version-bump commit and continues the rebase. Do **not**
+> manually resolve these conflicts — upstream's version is correct by definition.
+> 
 ---
 
 ## ✅ Step 7 — Verify the version
