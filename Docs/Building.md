@@ -199,7 +199,7 @@ export OBJDIR="D:/ducksteps-obj/esr1XX"
 2. **Choose a tag** → type the new version (e.g. `140.10.1`) → **Create new tag on publish**
 3. Title follows release name style (e.g. `⛐ It's the "..." release:`)
 4. Attach all 4 files
-5. Include SHA256 hashes and VirusTotal links in release notes
+5. Include SHA512 hashes and VirusTotal links in release notes
 6. Publish
 7. Update `Changelog.md` in `/docs/`
 
@@ -213,7 +213,7 @@ export OBJDIR="D:/ducksteps-obj/esr1XX"
 - [ ] `package.sh` completed and installer is ~72 MB (not under 1 MB)
 - [ ] Both files checksummed and submitted to VirusTotal
 - [ ] Zero unexpected VT flags
-- [ ] Release notes include SHA256 hashes and VirusTotal links for both files
+- [ ] Release notes include local SHA512 hashes and VirusTotal links for both files
 - [ ] `Changelog.md` updated
 
 ---
