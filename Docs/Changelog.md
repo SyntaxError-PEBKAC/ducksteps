@@ -4,6 +4,48 @@ All releases of ducksteps. Newest first.
 
 ---
 
+## [140.10.1] — 2026-04-29
+⛐ It's the "memory corruption and really long build days" release:
+
+🔄 Updated to Firefox ESR 140.10.1.
+
+🛡️ Addressed CVE-2026-7321 (WebRTC sandbox escape, CVSS 9.6 — the one that actually prompted the point release), CVE-2026-7322 (memory safety bugs with plausible RCE potential across ESR 115/140 and Firefox 150), and CVE-2026-7323 (additional memory safety bugs in ESR 140.10.0 and Firefox 150). Mozilla Foundation Security Advisory 2026-36. The WebRTC one had "critical" written all over it — good patch cycle to stay current on.
+
+🧠 This is the 5th build using the custom PGO training infrastructure. The extension now drives 87 sites through realistic scroll patterns, video playback, SPA hydration, map interactions, and speed tests before handing off to a clean shutdown. Each training run clocks in around 121 minutes. Each full build is around 190 minutes. The duck is very well trained at this point.
+
+🗜️ Retired UPX compression on the installer stub entirely. UPX 5.x triggered Malwarebytes AI false positives at every compression level tested — including -1. Not worth the 66KB. Zero VirusTotal flags on both files this release.
+
+🔧 Committed the custom PGO and UPX patches to the branch so they survive rebases automatically. Future releases won't require the manual patch dance that this one did.
+
+---
+
+## [140.10.0] — 2026-04-21
+⛐ It's the "the duck went to the gym" release:
+
+🔄 Updated to Firefox ESR 140.10.0. Picked up today's upstream security patch.
+
+🛡️ Patched 13 high-severity CVEs from MFSA 2026-32 (April 21, 2026). Highlights: use-after-free in the DOM (CVE-2026-6746), use-after-free in WebRTC (CVE-2026-6747), uninitialized memory in Web Codecs (CVE-2026-6748/6751), privilege escalation in WebRender (CVE-2026-6750), use-after-free in the JS engine (CVE-2026-6754), and a broad set of memory safety bugs with plausible RCE potential (CVE-2026-6785/6786). Full advisory: https://www.mozilla.org/en-US/security/advisories/mfsa2026-32/
+
+🧠 Rebuilt the PGO training infrastructure from scratch as a proper WebExtension. The extension drives all 87 sites autonomously through scroll behaviors, video playback, SPA hydration, map panning, and speed tests, then navigates to a localhost-served shutdown page that calls Quitter.quit() for a clean profraw flush. This is the 5th refinement build using custom training, with improved tunings after each run.
+
+🦾 Added RUSTFLAGS="-C target-cpu=znver5 -C opt-level=3" (Zen 5) and "-C target-cpu=haswell -C opt-level=3" (Legacy). The Rust side of the build was previously compiling to a generic target — it's now CPU-tuned to match the C/C++ flags.
+
+🖳 Switched the Legacy build to -march=x86-64-v3 -mtune=generic. Covers Intel Haswell (2013) and later, and most AMD chips from Excavator (2015) onward. The generic tune keeps it fast across both vendors.
+
+🔧 Patched profileserver.py with a 3-hour watchdog thread (safety net if a training site hangs), a @response_file workaround for Windows' 32K command-line limit when llvm-profdata merge chokes on hundreds of profraw filenames, and a Speedometer 3 HTTP server on port 8000 alongside the existing port 8888 server.
+
+🚫 Disabled the updater, maintenance service, default-browser-agent, and crashreporter at compile time. None of them are used, and they were just sitting there consuming memory and storage for no reason.
+
+🧪 Tested --enable-optimize="-O3" and --enable-optimize="-O3 /Gy". Both caused lld-link duplicate symbol errors in mozglue during the PGO instrumented phase — -O3 as a bare flag replaces Mozilla's default flag expansion in a way that breaks jemalloc operator handling. Reverted to bare --enable-optimize. Documented here so I remember not to try this again.
+
+🗜️ Upgraded UPX from 3.95w (2018) to 5.1.1 (2026). No meaningful size change, but years of fixes baked in. Turns out 5.x's defaults (--best --lzma --ultra-brute) are spicy enough to turn two VirusTotal flags into six, so I patched exe_7z_archive.py to dial it back to -6 with no algorithm flags. That added 1-2MB more total filesize, but there are no more false positives from VirusTotal.
+
+⏱️ Fun facts: each PGO run alone takes ~112 minutes, and a complete build now clocks in at ~190 minutes. (pls send RAM & caffeine)
+
+🤖 Fun fact # 2 (3?): I spent a painful number of Claude Opus 4.6 credits on this release, and Anthropic waited until I was basically done to drop Opus 4.7 — which uses over a third fewer tokens per task. I'm not saying the timing was personal. I'm just saying the timing was personal.
+
+---
+
 ## [140.9.1] — 2026-04-09
 ⛐ It's the "security patch, everyone's welcome!" release:
 
@@ -18,15 +60,6 @@ In practice that covers most Intel chips from Broadwell (2014) onward and most A
 
 🚨  VirusTotal: two flags (Arctic Wolf, Jiangmin) on Setup.exe — same compression heuristic suspects as always. Standalone clean.
 
-SHA256:
-- `ducksteps.140.9.1.Setup.exe` — `e53c8b909053044e5684b30c61709560d9b7a9ec1ae49637cda90d9b68f58916`
-
-- `ducksteps.140.9.1.Standalone.7z` — `a3c4a12d6ce798280faf032fb9d261d3e97c551d6e00d24ea241e84f1ae7c7c0`
-
-- `ducksteps.140.9.1.Legacy.Setup.exe` — `d6c75db6bf335415f1eb9739f38e9237aff6f44fe201e13ed8a4dc09880e987c`
-
-- `ducksteps.140.9.1.Legacy.Standalone.7z` — `7bceef55162137a4fef292e41c2153f1aa223bc1242fc08f4dddb7610baeffc8`
-
 ---
 
 ## [140.9.0] — 2026-03-25
@@ -39,11 +72,6 @@ SHA256:
 🛡️  AV false positive heads-up: compression flags (higher compression + file breakup) trigger suspicious-file detections on some scanners. Passed local Windows AV. VirusTotal: one flag (Jiangmin).
 
 👩🏼‍🏫  Noted: custom PGO training scripts are coming. The duck will waddle faster. (coming soon™️)
-
-SHA256:
-- `ducksteps.140.9.0.Setup.exe` — `00347cd7d8685161b7f339ca1a46076c8b7916b43f89c1d17dc267fd06a585df`
-
-- `ducksteps.140.9.0.Standalone.7z` — `a767b061579337e2c4e056fca3c99ef67f35cae4aedf2368f0206edf982f09d4`
 
 ---
 
@@ -59,11 +87,6 @@ SHA256:
 🗜️  Compressed Setup.exe further with additional UPX flags (`--best`, `--lzma`, `--ultra-brute`).
 
 🛡️  AV heads-up: aggressive compression triggers scanner heuristics. Passed local Bitdefender. VirusTotal: two flags (Arctic Wolf, Jiangmin).
-
-SHA256:
-- `ducksteps-140.8.0-Setup-PGO.exe` — `5cc189c72f656dcd1fd470d27c035fa3e2c00233f73697823dee619cb9c8031f`
-
-- `ducksteps-140.8.0-Standalone-PGO.7z` — `bc1566add7ac218bee59556923f72612f6c7114616dc90c4ea850d391a78ff02`
 
 ---
 
@@ -90,11 +113,6 @@ SHA256:
 
 💯  Version numbering now matches compiled Firefox version going forward.
 
-SHA256:
-- `ducksteps-140.8.0-Setup` — `2cc410d988b9db279e701126555ae4b3c10a5cb0c881d4523bc2e82f2f0fe253`
-
-- `ducksteps-140.8.0-Standalone` — `1867f5a197685d2896d8069ff92f62c64251f048a326fb5fe0d10c74778e0d53`
-
 ---
 
 ## [v1.0.0] — 2025-12-09
@@ -113,8 +131,3 @@ Benchmarks (9950X3D / RTX 4080 Super / 48GB DDR5 / 1080p 60Hz):
 - MotionMark 1.3.1: 2136.29
 
 - Speedometer 2.1: 624
-
-SHA256:
-- `Ryfox 1.0.0 Setup.exe` — `6915169da6b66a17efe167d309ce7f033aeda750d9310fc1b9d33644e6c55408`
-
-- `Ryfox 1.0.0 Setup.7z` — `f2a56d2537e0b7a9db5e483f9eb3acb92ef3a85122235efd6a507e04655afb13`
