@@ -3,12 +3,12 @@
 **Environment:**
 | | |
 |---|---|
-| MozillaBuild shell | `D:\mozilla-build\start-shell.bat` |
-| Source | `D:\mozilla-source\ducksteps` |
-| Zen5 objdir | `D:\ducksteps-obj\esr1XX` |
-| Legacy objdir | `D:\ducksteps-obj\esr1XX-Legacy` |
+| MozillaBuild shell | `D:\ducksteps\mozilla-build\start-shell.bat` |
+| Source | `D:\ducksteps\mozilla-source\ducksteps` |
+| Zen5 objdir | `D:\ducksteps\ducksteps-obj\esr1XX` |
+| Legacy objdir | `D:\ducksteps\ducksteps-obj\esr1XX-Legacy` |
 | rcedit | `C:\Users\User\.mozbuild\rcedit\rcedit-x64.exe` |
-| package.sh | `D:\mozilla-source\ducksteps\package.sh` |
+| package.sh | `D:\ducksteps\mozilla-source\ducksteps\package.sh` |
 
 ---
 
@@ -21,7 +21,7 @@ Run `start-shell.bat` from `D:\mozilla-build`.
 ## 📂 Step 2 — Navigate to source
 
 ```bash
-cd /d/mozilla-source/ducksteps
+cd /d/ducksteps/mozilla-source/ducksteps
 ```
 
 ---
@@ -129,8 +129,8 @@ This stamps the ducksteps icon via `rcedit-x64.exe` onto the bare NSIS stub **be
 
 | Output | Path |
 |---|---|
-| Installer EXE | `D:/ducksteps-obj/esr1XX/dist/install/sea/firefox-1XX.X.X.en-US.win64.installer.exe` |
-| Standalone ZIP | `D:/ducksteps-obj/esr1XX/dist/firefox-1XX.X.X.en-US.win64.zip` |
+| Installer EXE | `D:/ducksteps/ducksteps-obj/esr1XX/dist/install/sea/firefox-1XX.X.X.en-US.win64.installer.exe` |
+| Standalone ZIP | `D:/ducksteps/ducksteps-obj/esr1XX/dist/firefox-1XX.X.X.en-US.win64.zip` |
 
 ---
 
@@ -169,8 +169,8 @@ Expected: zero flags. If you see flags on Setup.exe, investigate.
 Switch to the Legacy mozconfig and rebuild from scratch:
 
 ```bash
-export MOZCONFIG=/d/mozilla-source/ducksteps/.mozconfig-Legacy
-export OBJDIR="D:/ducksteps-obj/esr1XX-Legacy"
+export MOZCONFIG=/d/ducksteps/mozilla-source/ducksteps/.mozconfig-Legacy
+export OBJDIR="D:/ducksteps/ducksteps-obj/esr1XX-Legacy"
 ./mach clobber
 ./mach build
 ./mach run
@@ -180,15 +180,15 @@ export OBJDIR="D:/ducksteps-obj/esr1XX-Legacy"
 
 | Output | Path |
 |---|---|
-| Installer EXE | `D:/ducksteps-obj/esr1XX-Legacy/dist/install/sea/firefox-1XX.X.X.en-US.win64.installer.exe` |
-| Standalone ZIP | `D:/ducksteps-obj/esr1XX-Legacy/dist/firefox-1XX.X.X.en-US.win64.zip` |
+| Installer EXE | `D:/ducksteps/ducksteps-obj/esr1XX-Legacy/dist/install/sea/firefox-1XX.X.X.en-US.win64.installer.exe` |
+| Standalone ZIP | `D:/ducksteps/ducksteps-obj/esr1XX-Legacy/dist/firefox-1XX.X.X.en-US.win64.zip` |
 
 Repeat steps 11–12 using `ducksteps.1XX.X.X.Legacy.Setup.exe` and `ducksteps.1XX.X.X.Legacy.Standalone.7z`.
 
 To switch back to Zen5:
 ```bash
-export MOZCONFIG=/d/mozilla-source/ducksteps/.mozconfig
-export OBJDIR="D:/ducksteps-obj/esr1XX"
+export MOZCONFIG=/d/ducksteps/mozilla-source/ducksteps/.mozconfig
+export OBJDIR="D:/ducksteps/ducksteps-obj/esr1XX"
 ```
 
 ---
@@ -199,7 +199,7 @@ export OBJDIR="D:/ducksteps-obj/esr1XX"
 2. **Choose a tag** → type the new version (e.g. `140.10.1`) → **Create new tag on publish**
 3. Title follows release name style (e.g. `⛐ It's the "..." release:`)
 4. Attach all 4 files
-5. Include SHA512 hashes and VirusTotal links in release notes
+5. Include SHA256 hashes and VirusTotal links in release notes
 6. Publish
 7. Update `Changelog.md` in `/docs/`
 
@@ -213,7 +213,7 @@ export OBJDIR="D:/ducksteps-obj/esr1XX"
 - [ ] `package.sh` completed and installer is ~72 MB (not under 1 MB)
 - [ ] Both files checksummed and submitted to VirusTotal
 - [ ] Zero unexpected VT flags
-- [ ] Release notes include local SHA512 hashes and VirusTotal links for both files
+- [ ] Release notes include SHA256 hashes and VirusTotal links for both files
 - [ ] `Changelog.md` updated
 
 ---
@@ -226,5 +226,5 @@ export OBJDIR="D:/ducksteps-obj/esr1XX"
 - **`rcedit-x64.exe`** is correct for win64. The x86 binary in the same folder is unused.
 - **`instrumented/`** in the objdir is the PGO training binary. Never distribute from it.
 - **UPX is intentionally disabled** on the SFX stub (`exe_7z_archive.py` patch). UPX 5.x triggered Malwarebytes AI false positives at every compression level tested. The stub is ~230KB — the size savings weren't worth the VT noise. This patch is committed to the branch and survives rebases automatically.
-- **PGO log location:** `D:/ducksteps-obj/esr1XX/instrumented/pgo_logs/profile-run-2.log`
+- **PGO log location:** `D:/ducksteps/ducksteps-obj/esr1XX/instrumented/pgo_logs/profile-run-2.log`
 - **LLVM Profile Errors** in the PGO log about "temporal profiles do not support merging at runtime" are expected. Not data loss — ignore them.
