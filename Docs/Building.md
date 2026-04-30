@@ -1,12 +1,14 @@
 # ducksteps Build & Release Runbook
 
 **Environment:**
-- MozillaBuild shell: `D:\mozilla-build\start-shell.bat`
-- Source: `D:\mozilla-source\ducksteps`
-- Objdir: `D:\ducksteps-obj\esr1XX`
-- Legacy Objdir: `D:\ducksteps-obj\esr1XX-Legacy`
-- rcedit: `C:\Users\User\.mozbuild\rcedit\rcedit-x64.exe`
-- package.sh: `D:\mozilla-source\ducksteps\package.sh`
+| | |
+|---|---|
+| MozillaBuild shell | `D:\mozilla-build\start-shell.bat` |
+| Source | `D:\mozilla-source\ducksteps` |
+| Zen5 objdir | `D:\ducksteps-obj\esr1XX` |
+| Legacy objdir | `D:\ducksteps-obj\esr1XX-Legacy` |
+| rcedit | `C:\Users\User\.mozbuild\rcedit\rcedit-x64.exe` |
+| package.sh | `D:\mozilla-source\ducksteps\package.sh` |
 
 ---
 
@@ -38,9 +40,7 @@ git fetch --tags origin
 git tag -l "FIREFOX_1XX*esr*RELEASE"
 ```
 
-You're looking for a tag in the format `FIREFOX_1XX_X_0esr_RELEASE` where X is the new point release.
-
-If the tag isn't listed, the release hasn't been tagged upstream yet. Do not proceed until it appears.
+You're looking for `FIREFOX_1XX_X_XeXXX_RELEASE`. If it's not listed, upstream hasn't tagged yet — don't proceed.
 
 ---
 
@@ -50,43 +50,30 @@ If the tag isn't listed, the release hasn't been tagged upstream yet. Do not pro
 git checkout esr1XX
 ```
 
-Expected output includes:
-
-```
-Switched to branch 'esr1XX'
-Your branch and 'origin/esr1XX' have diverged...
-```
-
-This is normal. Do **not** run `git pull` — it will destroy your local patchset on a diverged branch.
+Expected output includes `Your branch and 'origin/esr1XX' have diverged` — that's normal. Do **not** run `git pull`.
 
 ---
 
-## 🔀 Step 6 — Rebase your patchset onto the new release tag
-
-Replace `FIREFOX_1XX_X_0esr_RELEASE` with the actual tag from Step 4.
+## 🔀 Step 6 — Rebase onto the new release tag
 
 ```bash
-git rebase FIREFOX_1XX_X_0esr_RELEASE
+git stash                                        # only if you have unstaged changes
+git rebase FIREFOX_1XX_X_XeXXX_RELEASE
+git stash pop                                    # if you stashed
 ```
 
-If you hit a conflict, git pauses and tells you which file. Resolve it, then:
+**Your patch stack** (these replay automatically — no manual re-patching needed):
+- `ducksteps: branding + patchset`
+- `Custom PGO training: replace Mozilla default workload with realistic browsing corpus`
+- `ducksteps: WebExtension PGO training + profileserver patches`
+- `ducksteps: remove UPX from SFX stub (VT false positive fix)`
 
-```bash
-git rebase --continue
-```
-
-> ⚠️ **Version-bump conflict:** Your patchset includes a manual version-bump commit
-> from the previous release. When rebasing onto a new upstream tag, git will conflict
-> on `browser/config/version.txt`, `browser/config/version_display.txt`, and
-> `config/milestone.txt` because upstream already carries the correct new version.
->
-> This is expected. Run:
+> ⚠️ **Version file conflict:** If git pauses on `browser/config/version.txt`, `version_display.txt`, or `config/milestone.txt` — upstream owns those files. Run:
 > ```bash
 > git rebase --skip
 > ```
-> This discards your stale version-bump commit and continues the rebase. Do **not**
-> manually resolve these conflicts — upstream's version is correct by definition.
-> 
+> Do **not** manually resolve. Upstream's version is correct by definition.
+
 ---
 
 ## ✅ Step 7 — Verify the version
@@ -96,14 +83,7 @@ cat browser/config/version.txt
 cat browser/config/version_display.txt
 ```
 
-Expected output:
-
-```
-1XX.X.X
-1XX.X.Xesr
-```
-
-If either file shows the old version number, stop. The rebase didn't land correctly.
+Expected: `1XX.X.X` and `1XX.X.Xesr`. If either shows the old version, the rebase didn't land correctly — stop.
 
 ---
 
@@ -113,95 +93,63 @@ If either file shows the old version number, stop. The rebase didn't land correc
 ./mach clobber
 ```
 
-Safe default for all release builds. Avoids stale outputs from the previous build.
-
 ---
 
-## 🔨 Step 9 — Build & Test
+## 🔨 Step 9 — Build
 
 ```bash
 ./mach build
 ```
 
-This will take a long time. The PGO flow runs automatically:
-
+The PGO flow runs automatically:
 1. Instrumented build compiles
-2. Firefox launches silently to collect profile data — **do not interrupt this**
+2. Firefox launches and runs the 87-site training corpus (~120 min) — do not interrupt
 3. Optimized build compiles using profile data
 
-Build is complete when you see:
+Done when you see `your build finally finished successfully!`
 
-```
-your build finally finished successfully!
-```
-
-Next test the browser built successfully by running:
-
+Verify it launches:
 ```bash
 ./mach run
 ```
 
-Do not distribute anything from the `instrumented/` folder in the objdir — that's the PGO training binary, not the final build.
+> **Never distribute from `instrumented/`** — that's the PGO training binary.
 
 ---
 
-## 📦 Step 10 — Package (icon stamp + assembly)
+## 📦 Step 10 — Package
 
 ```bash
 ./package.sh
 ```
 
-This does two things in order:
+This stamps the ducksteps icon via `rcedit-x64.exe` onto the bare NSIS stub **before** `mach package` appends the 7z payload. Running rcedit after assembly truncates the payload to ~208KB — `package.sh` handles the correct order.
 
-1. Stamps the ducksteps icon onto the NSIS stub via `rcedit-x64.exe` **before** mach package runs. (rcedit truncates anything past the PE boundary — running it post-assembly destroys the installer.)
-2. Calls `./ mach package`, which appends the 7z payload to the already-stamped stub.
+**Sanity check:** Installer should be ~72 MB. Under 1 MB means icon stamping failed — re-run `./package.sh`.
 
-**Sanity check:** The installer EXE should be approximately 72 MB. If it's under 1 MB, the icon stamping corrupted it — re-run `./package.sh`.
-
-Raw outputs after this step:
-
-| File | Path |
+| Output | Path |
 |---|---|
 | Installer EXE | `D:/ducksteps-obj/esr1XX/dist/install/sea/firefox-1XX.X.X.en-US.win64.installer.exe` |
 | Standalone ZIP | `D:/ducksteps-obj/esr1XX/dist/firefox-1XX.X.X.en-US.win64.zip` |
 
 ---
 
-## 🗜️ Step 11 — Verify UPX ran
+## 7️⃣ Step 11 — Repack standalone as 7z
 
-UPX compression on the 7-zip SFX stub runs automatically during `./ mach package`.
-Confirm it ran cleanly:
-
-```bash
-upx -t /d/ducksteps-obj/esr1XX/dist/install/sea/firefox-*.win64.installer.exe
-```
-
-Expected output: `[OK]`. If it fails, re-run `./package.sh`.
-
-**Post-rebase patch — exe_7z_archive.py UPX flags:**
-File: `python/mozbuild/mozbuild/action/exe_7z_archive.py`
-Remove `--best`, `--lzma`, `--ultra-brute` from the UPX cmd list. Replace with `-6` only.
-Without this, UPX 5.x triggers 4-6 VirusTotal flags on Setup.exe.
-
----
-
-## 7️⃣ Step 12 — Repack standalone as 7z
-
-Convert the ZIP from Step 10 to a 7z using these exact settings:
-
-- Format: 7z
-- Compression level: 9 — Ultra
-- Method: LZMA2
-- Dictionary size: 3840 MB
-- Word size: 273
-- Solid block: yes
-- Threads: 3
+Convert the ZIP to 7z with these exact settings:
+- **Format:** 7z
+- **Compression level:** 9 — Ultra
+- **Method:** LZMA2
+- **Dictionary size:** 3840 MB
+- **Word size:** 273
+- **Solid block:** yes
+- **Threads:** 3
 
 Output filename: `ducksteps.1XX.X.X.Standalone.7z`
 
 ---
 
-## #️⃣ Step 13 — Checksum both release files
+## #️⃣ Step 12 — Checksum both release files
 
 In PowerShell:
 
@@ -212,25 +160,13 @@ Get-FileHash "ducksteps.1XX.X.X.Standalone.7z" -Algorithm SHA256
 
 Submit both to [VirusTotal](https://www.virustotal.com). Save the result URLs — they go in the release notes.
 
-Expected false positive pattern: Arctic Wolf and/or Jiangmin flagging Setup.exe due to UPX compression heuristics. Anything beyond those two warrants investigation.
+Expected: zero flags. If you see flags on Setup.exe, investigate.
 
 ---
 
-## 🚀 Step 14 — Publish on GitHub
+## 💻 Step 13 — Build and Package Legacy Variant
 
-1. Repo → **Releases** → **Draft a new release**
-2. **Choose a tag** → type the new version number (e.g. `1XX.X.X`) → **Create new tag on publish**
-3. Title: follow your release name style (e.g. `⛐ It's the "..." release:`)
-4. Attach both files:
-   - `ducksteps.1XX.X.X.Setup.exe`
-   - `ducksteps.1XX.X.X.Standalone.7z`
-5. Release notes: include SHA256 hashes and VirusTotal links for both files
-6. Publish — GitHub creates the tag on the default branch at publish time
-7. Changelog: Update Changelog.md in the Repos /Docs/ folder.
-
----
-
-## 💻 Step 15 — Build and Package Skylake Variant
+Switch to the Legacy mozconfig and rebuild from scratch:
 
 ```bash
 export MOZCONFIG=/d/mozilla-source/ducksteps/.mozconfig-Legacy
@@ -241,39 +177,54 @@ export OBJDIR="D:/ducksteps-obj/esr1XX-Legacy"
 ./mach package
 ```
 
-- Re-run steps 11-14 using the following naming convention: ducksteps.1XX.X.X.Legacy.Setup.exe and ducksteps.1XX.X.X.Legacy.Standalone.7z
-- Raw outputs after this step:
 
-| File | Path |
+| Output | Path |
 |---|---|
 | Installer EXE | `D:/ducksteps-obj/esr1XX-Legacy/dist/install/sea/firefox-1XX.X.X.en-US.win64.installer.exe` |
 | Standalone ZIP | `D:/ducksteps-obj/esr1XX-Legacy/dist/firefox-1XX.X.X.en-US.win64.zip` |
 
-- To revert to zen5 building ( change 1XX info):
-```
+Repeat steps 11–12 using `ducksteps.1XX.X.X.Legacy.Setup.exe` and `ducksteps.1XX.X.X.Legacy.Standalone.7z`.
+
+To switch back to Zen5:
+```bash
 export MOZCONFIG=/d/mozilla-source/ducksteps/.mozconfig
 export OBJDIR="D:/ducksteps-obj/esr1XX"
 ```
+
 ---
 
-## ☑️ Release checklist
+## 🚀 Step 14 — Publish on GitHub
+
+1. Repo → **Releases** → **Draft a new release**
+2. **Choose a tag** → type the new version (e.g. `140.10.1`) → **Create new tag on publish**
+3. Title follows release name style (e.g. `⛐ It's the "..." release:`)
+4. Attach all 4 files
+5. Include SHA256 hashes and VirusTotal links in release notes
+6. Publish
+7. Update `Changelog.md` in `/docs/`
+
+---
+
+## ☑️ Release Checklist
 
 - [ ] `version.txt` and `version_display.txt` show the correct new version
 - [ ] Build completed without fatal errors
-- [ ] `./mach run` launches and shows correct ducksteps branding (no Nightly purple)
+- [ ] `./mach run` launches with correct ducksteps branding (no Nightly purple)
 - [ ] `package.sh` completed and installer is ~72 MB (not under 1 MB)
-- [ ] `upx -t` returned `[OK]` on the Setup.exe
 - [ ] Both files checksummed and submitted to VirusTotal
-- [ ] exe_7z_archive.py UPX patch applied (check after every rebase)
+- [ ] Zero unexpected VT flags
 - [ ] Release notes include SHA256 hashes and VirusTotal links for both files
+- [ ] `Changelog.md` updated
 
 ---
 
 ## 📝 Notes
 
-- **Do not use `git pull` at any point** in this workflow — your branch diverges from upstream intentionally.
-- **Detached HEAD warnings** from git are harmless. The rebase workflow keeps you on `esr1XX`.
-- **NSIS warnings 6010, 6012, 9000** during packaging are pre-existing upstream. Harmless, appear in every Firefox build.
-- **`rcedit-x64.exe`** is correct for win64 builds. The x86 binary in the same folder is unused.
-- **`instrumented/`** in the objdir is the PGO training build. Never distribute from it.
-- **UPX 3.95w** (2018) is what Mozilla's toolchain ships internally. Your standalone UPX 5.1.0 install is not invoked during the build.
+- **`git pull` is banned** — your branch diverges from upstream intentionally. Always rebase.
+- **Detached HEAD warnings** are harmless. The rebase workflow keeps you on `esr1XX`.
+- **NSIS warnings 6010, 6012, 9000** are pre-existing upstream noise. Ignore them.
+- **`rcedit-x64.exe`** is correct for win64. The x86 binary in the same folder is unused.
+- **`instrumented/`** in the objdir is the PGO training binary. Never distribute from it.
+- **UPX is intentionally disabled** on the SFX stub (`exe_7z_archive.py` patch). UPX 5.x triggered Malwarebytes AI false positives at every compression level tested. The stub is ~230KB — the size savings weren't worth the VT noise. This patch is committed to the branch and survives rebases automatically.
+- **PGO log location:** `D:/ducksteps-obj/esr1XX/instrumented/pgo_logs/profile-run-2.log`
+- **LLVM Profile Errors** in the PGO log about "temporal profiles do not support merging at runtime" are expected. Not data loss — ignore them.
