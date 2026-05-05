@@ -29,10 +29,15 @@ const SITES = [
   ["https://www.twitch.tv/StreamerHouse", "video", 75],
   ["https://www.dailymotion.com/video/xa5pjb6", "video", 120],
 
+  // SPEED TESTS — canvas rendering + network stack
+  ["https://www.speedtest.net", "speedtest", 75],
+  ["https://librespeed.org", "speedtest", 45],
+  ["https://speed.cloudflare.com", "speedtest", 72],
+
   // JS-HEAVY SPAs — SpiderMonkey JIT, GC, DOM mutation
+  ["https://duck.ai", "spa", 25],
   ["https://github.com/SyntaxError-PEBKAC/ducksteps/releases", "spa", 60],
   ["https://duckduckgo.com/?q=firefox+ESR+performance", "spa", 22],
-  ["https://duck.ai", "spa", 15],
   ["https://claude.ai", "spa", 23],
   ["https://redlib.catsarch.com/", "spa", 90],
   ["https://redlib.catsarch.com/r/pics/comments/haucpf/ive_found_a_few_funny_memories_during_lockdown/", "spa", 182],
@@ -107,11 +112,6 @@ const SITES = [
   ["https://www.openstreetmap.org/#map=12/35.6762/139.6503", "map", 60],
   ["https://threejs.org/examples/#webgl_animation_skinning_blending", "map", 40],
   ["https://www.shadertoy.com/view/Xds3zN", "map", 55],
-
-  // SPEED TESTS — canvas rendering + network stack
-  ["https://www.speedtest.net", "speedtest", 75],
-  ["https://speed.cloudflare.com", "speedtest", 72],
-  ["https://librespeed.org", "speedtest", 45],
 
   // STATIC / REFERENCE — baseline coverage
   ["https://www.boincstats.com/stats/-1/project/detail/credit", "static", 67],
