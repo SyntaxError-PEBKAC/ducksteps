@@ -19,7 +19,8 @@ const PAGE_LOAD_TIMEOUT = 30000;
 // ---------------------------------------------------------------------------
 // Site corpus: [url, behavior, dwell_seconds]
 // Sorted by PGO impact (high -> low) within each category.
-// Total estimated runtime: ~112 minutes.
+// Total estimated runtime: ~130 minutes.
+// LAST UPDATED 05/MAY/2026
 // ---------------------------------------------------------------------------
 const SITES = [
   // VIDEO PLAYBACK — codec + compositor + audio sync
@@ -30,30 +31,30 @@ const SITES = [
   ["https://www.dailymotion.com/video/xa5pjb6", "video", 120],
 
   // SPEED TESTS — canvas rendering + network stack
-  ["https://www.speedtest.net", "speedtest", 75],
-  ["https://librespeed.org", "speedtest", 45],
-  ["https://speed.cloudflare.com", "speedtest", 72],
-  ["http://localhost:8000/InteractiveRunner.html", "speedtest", 120],
+  ["https://www.speedtest.net", "speedtest_ookla", 75],          // dedicated behavior: clicks a.js-start-test
+  ["https://librespeed.org", "librespeed", 45],                   // dedicated behavior: clicks #start-button
+  ["https://speed.cloudflare.com", "speedtest", 72],              // generic heuristic still fine here
+  ["http://localhost:8000/InteractiveRunner.html?startAutomatically=true", "static", 120], // Speedometer 3 — auto-fires via URL param, no click needed
 
   // JS-HEAVY SPAs — SpiderMonkey JIT, GC, DOM mutation
-  ["https://duck.ai", "spa", 25],
+  ["https://duck.ai", "duckai", 90],                              // consent dismiss + Haiku 4.5 + SpiderMonkey prompt
   ["https://github.com/SyntaxError-PEBKAC/ducksteps/releases", "spa", 60],
-  ["https://duckduckgo.com/?q=firefox+ESR+performance", "spa", 22],
-  ["https://claude.ai", "spa", 23],
+  ["https://duckduckgo.com/?q=firefox+ESR+performance", "spa", 45],
+  ["https://claude.ai", "spa", 45],
   ["https://redlib.catsarch.com/", "spa", 90],
   ["https://redlib.catsarch.com/r/pics/comments/haucpf/ive_found_a_few_funny_memories_during_lockdown/", "spa", 182],
   ["https://react.dev/learn", "spa", 85],
   ["https://www.airbnb.com/s/Tokyo/homes", "spa", 35],
-  ["https://netflix.com", "spa", 15],
+  ["https://netflix.com", "spa", 45],
   ["https://angular.dev/overview", "spa", 40],
   ["https://vuejs.org/guide/essentials/component-basics.html", "spa", 73],
   ["https://svelte.dev/docs/svelte/v5-migration-guide", "spa", 185],
   ["https://observablehq.com/@d3/star-map", "spa", 30],
   ["https://d3js.org/d3-zoom", "spa", 110],
-  ["https://excalidraw.com", "spa", 15],
+  ["https://excalidraw.com", "spa", 45],
   ["https://www.reddit.com/r/firefox/", "spa", 120],
-  ["https://old.reddit.com/r/firefox/", "spa", 17],
-  ["https://news.ycombinator.com", "spa", 15],
+  ["https://old.reddit.com/r/firefox/", "spa", 45],
+  ["https://news.ycombinator.com", "spa", 45],
   ["https://stackoverflow.com/questions?tab=active&pagesize=50", "spa", 48],
   ["https://meta.discourse.org/latest", "spa", 110],
 
@@ -76,13 +77,13 @@ const SITES = [
   ["https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Expressions_and_operators", "long_read", 170],
   ["https://doc.rust-lang.org/book/ch02-00-guessing-game-tutorial.html", "long_read", 120],
   ["https://docs.python.org/3/tutorial/controlflow.html", "long_read", 134],
-  ["https://caniuse.com/?search=heic", "long_read", 15],
-  ["https://www.npmjs.com/package/@cspell/dict-java/v/5.0.12", "long_read", 15],
+  ["https://caniuse.com/?search=heic", "long_read", 45],
+  ["https://www.npmjs.com/package/@cspell/dict-java/v/5.0.12", "long_read", 45],
   ["https://pypi.org/project/emailproxy/", "long_read", 75],
   // International text (CJK, RTL, complex scripts)
   ["https://www.nhk.or.jp/nhkworld/", "long_read", 40],
   ["https://www3.nhk.or.jp/news/", "long_read", 44],
-  ["https://www.naver.com", "long_read", 20],
+  ["https://www.naver.com", "long_read", 45],
   ["https://www.aljazeera.net", "long_read", 110],
   ["https://www.thehindu.com", "long_read", 70],
   ["https://zh.wikipedia.org/wiki/%E7%91%9E%E5%A3%AB", "long_read", 210],
@@ -92,7 +93,7 @@ const SITES = [
 
   // E-COMMERCE — image decode, lazy load, mixed layout
   ["https://www.amazon.com/s?k=mechanical+keyboard", "ecommerce", 48],
-  ["https://www.apple.com/shop/buy-mac", "ecommerce", 25],
+  ["https://www.apple.com/shop/buy-mac", "ecommerce", 45],
   ["https://www.ebay.com/sch/i.html?_nkw=gpu", "ecommerce", 68],
   ["https://www.bestbuy.com/site/searchpage.jsp?st=laptop", "ecommerce", 54],
   ["https://www.newegg.com/p/pl?d=ssd", "ecommerce", 55],
@@ -116,16 +117,16 @@ const SITES = [
 
   // STATIC / REFERENCE — baseline coverage
   ["https://www.boincstats.com/stats/-1/project/detail/credit", "static", 67],
-  ["https://time.is", "static", 30],
-  ["https://dnscheck.tools", "static", 23],
-  ["https://goodwok.day", "static", 20],
-  ["https://libera.chat", "static", 21],
-  ["https://www.usa.gov", "static", 30],
+  ["https://time.is", "static", 45],
+  ["https://dnscheck.tools", "static", 45],
+  ["https://goodwok.day", "static", 45],
+  ["https://libera.chat", "static", 45],
+  ["https://www.usa.gov", "static", 45],
   ["https://www.cdc.gov/talaromycosis/about/index.html", "static", 59],
   ["https://www.nasa.gov", "static", 58],
-  ["https://europa.eu", "static", 35],
-  ["https://www.gov.uk", "static", 40],
-  ["https://www.craigslist.org", "static", 15],
+  ["https://europa.eu", "static", 45],
+  ["https://www.gov.uk", "static", 45],
+  ["https://www.craigslist.org", "static", 45],
 ];
 
 // ---------------------------------------------------------------------------
@@ -133,7 +134,6 @@ const SITES = [
 // ---------------------------------------------------------------------------
 
 function log(msg) {
-  // dump() writes to stdout; console.error appears in build console as fallback
   dump("[ducksteps PGO] " + msg + "\n");
   console.error("[ducksteps PGO] " + msg);
 }
@@ -169,11 +169,8 @@ function waitForTabLoad(tabId, timeout) {
 
 // ---------------------------------------------------------------------------
 // Hot-path exerciser (injected into every page alongside scroll behavior)
-// Runs lightweight operations that exercise rendering, layout, and graphics
-// paths not covered by scrolling alone.
 // ---------------------------------------------------------------------------
 function _exerciseHotPaths(dwellMs) {
-  // requestAnimationFrame — compositor timing + vsync
   var rafCount = 0;
   var rafMax = Math.floor(dwellMs / 16);
   (function rafLoop() {
@@ -181,7 +178,6 @@ function _exerciseHotPaths(dwellMs) {
     if (rafCount < rafMax) requestAnimationFrame(rafLoop);
   })();
 
-  // IntersectionObserver — lazy loading code paths
   try {
     var io = new IntersectionObserver(function () {});
     var observed = 0;
@@ -190,12 +186,9 @@ function _exerciseHotPaths(dwellMs) {
         if (observed++ < 50) io.observe(el);
       }
     );
-    setTimeout(function () {
-      io.disconnect();
-    }, dwellMs);
+    setTimeout(function () { io.disconnect(); }, dwellMs);
   } catch (e) {}
 
-  // MutationObserver — DOM mutation watching paths
   try {
     var mo = new MutationObserver(function () {});
     mo.observe(document.body || document.documentElement, {
@@ -203,12 +196,9 @@ function _exerciseHotPaths(dwellMs) {
       subtree: true,
       attributes: true,
     });
-    setTimeout(function () {
-      mo.disconnect();
-    }, dwellMs);
+    setTimeout(function () { mo.disconnect(); }, dwellMs);
   } catch (e) {}
 
-  // Periodic forced layout + style resolution
   var layoutInterval = setInterval(function () {
     try {
       var el = document.elementFromPoint(
@@ -222,11 +212,8 @@ function _exerciseHotPaths(dwellMs) {
       }
     } catch (e) {}
   }, 2000);
-  setTimeout(function () {
-    clearInterval(layoutInterval);
-  }, dwellMs);
+  setTimeout(function () { clearInterval(layoutInterval); }, dwellMs);
 
-  // Canvas 2D micro-draws — graphics pipeline
   try {
     var c = document.createElement("canvas");
     c.width = 64;
@@ -240,31 +227,21 @@ function _exerciseHotPaths(dwellMs) {
         ctx.strokeRect(Math.random() * 48, Math.random() * 48, 16, 16);
         ctx.clearRect(0, 0, 64, 64);
       }, 500);
-      setTimeout(function () {
-        clearInterval(canvasInterval);
-      }, dwellMs);
+      setTimeout(function () { clearInterval(canvasInterval); }, dwellMs);
     }
   } catch (e) {}
 
-  // Performance API — high-resolution timer paths
   var perfInterval = setInterval(function () {
     performance.now();
-    try {
-      performance.getEntriesByType("resource").slice(0, 5);
-    } catch (e) {}
+    try { performance.getEntriesByType("resource").slice(0, 5); } catch (e) {}
   }, 3000);
-  setTimeout(function () {
-    clearInterval(perfInterval);
-  }, dwellMs);
+  setTimeout(function () { clearInterval(perfInterval); }, dwellMs);
 }
 
 // ---------------------------------------------------------------------------
-// Scroll behaviors — each function runs in the page's content script context.
-// They set up async timers and return immediately. The background script
-// sleeps for the dwell duration independently.
+// Scroll behaviors
 // ---------------------------------------------------------------------------
 
-// Reading pattern: burst 3-5 scrolls, 5-10s read pause, repeat
 function _longRead(dwellMs) {
   var end = Date.now() + dwellMs;
   var jitter = function (base, pct) {
@@ -299,7 +276,6 @@ function _longRead(dwellMs) {
   cycle();
 }
 
-// Video: play video, scroll comments at dwellMs * 0.6
 function _video(dwellMs) {
   setTimeout(function () {
     try {
@@ -311,18 +287,13 @@ function _video(dwellMs) {
   var end = Date.now() + dwellMs;
   setTimeout(function () {
     var si = setInterval(function () {
-      if (Date.now() >= end) {
-        clearInterval(si);
-        return;
-      }
+      if (Date.now() >= end) { clearInterval(si); return; }
       var px = 300 + Math.floor(Math.random() * 200);
       window.scrollBy({ top: px, behavior: "smooth" });
     }, 1500 + Math.random() * 600);
   }, scrollStart);
 }
 
-// Video with fixed 70s scroll delay — play immediately, hold scroll until 70s.
-// Used for YouTube: gives the video enough watch-time before scrolling comments.
 function _videoLateScroll(dwellMs) {
   setTimeout(function () {
     try {
@@ -333,17 +304,13 @@ function _videoLateScroll(dwellMs) {
   var end = Date.now() + dwellMs;
   setTimeout(function () {
     var si = setInterval(function () {
-      if (Date.now() >= end) {
-        clearInterval(si);
-        return;
-      }
+      if (Date.now() >= end) { clearInterval(si); return; }
       var px = 300 + Math.floor(Math.random() * 200);
       window.scrollBy({ top: px, behavior: "smooth" });
     }, 1500 + Math.random() * 600);
-  }, 70000); // fixed 70s before scrolling to comments
+  }, 70000);
 }
 
-// E-commerce: fast skim, backtrack, slow read
 function _ecommerce(dwellMs) {
   var end = Date.now() + dwellMs;
   var skimEnd = Date.now() + dwellMs * 0.4;
@@ -357,9 +324,7 @@ function _ecommerce(dwellMs) {
       window.scrollBy({ top: -Math.floor(sh * 0.3), behavior: "smooth" });
       setTimeout(function () {
         var remaining = end - Date.now();
-        if (remaining > 5000) {
-          _longRead(remaining - 2000);
-        }
+        if (remaining > 5000) _longRead(remaining - 2000);
       }, 2000);
       return;
     }
@@ -375,7 +340,6 @@ function _ecommerce(dwellMs) {
   }, 400 + Math.random() * 200);
 }
 
-// SPA: trigger hydration, focus inputs, then reading scroll
 function _spa(dwellMs) {
   var end = Date.now() + dwellMs;
   var i = 0;
@@ -404,10 +368,6 @@ function _spa(dwellMs) {
   setTimeout(hydrate, 2000);
 }
 
-// Long-read with bottom-right ad dismissal for AP News.
-// Waits 4s for the ad to render, scans the bottom-right viewport quadrant
-// for close/dismiss buttons, clicks the first match, then hands off to
-// _longRead. Requires _longRead injected as a dependency (see injectBehavior).
 function _apnewsRead(dwellMs) {
   setTimeout(function () {
     try {
@@ -423,7 +383,6 @@ function _apnewsRead(dwellMs) {
         var btns = document.querySelectorAll(closeSelectors[s]);
         for (var b = 0; b < btns.length; b++) {
           var rect = btns[b].getBoundingClientRect();
-          // Bottom-right quadrant: x > 55% viewport width, y > 55% viewport height
           if (
             rect.width > 0 &&
             rect.x > window.innerWidth * 0.55 &&
@@ -436,23 +395,17 @@ function _apnewsRead(dwellMs) {
       }
     } catch (e) {}
   }, 4000);
-
-  // Hand off to _longRead after ad dismissal window
   setTimeout(function () {
     var remaining = dwellMs - 5000;
     if (remaining > 5000) _longRead(remaining);
   }, 5000);
 }
 
-// Map/Canvas/WebGL: pan, zoom, hover
 function _map(dwellMs) {
   var end = Date.now() + dwellMs;
   setTimeout(function () {
     var mi = setInterval(function () {
-      if (Date.now() >= end) {
-        clearInterval(mi);
-        return;
-      }
+      if (Date.now() >= end) { clearInterval(mi); return; }
       document.dispatchEvent(
         new WheelEvent("wheel", {
           deltaY: Math.random() > 0.5 ? 120 : -120,
@@ -467,27 +420,15 @@ function _map(dwellMs) {
         var dx = Math.floor(Math.random() * 400 - 200);
         var dy = Math.floor(Math.random() * 300 - 150);
         var el = document.elementFromPoint(cx, cy) || document;
-        el.dispatchEvent(
-          new MouseEvent("mousedown", {
-            clientX: cx, clientY: cy, bubbles: true,
-          })
-        );
-        el.dispatchEvent(
-          new MouseEvent("mousemove", {
-            clientX: cx + dx, clientY: cy + dy, bubbles: true,
-          })
-        );
-        el.dispatchEvent(
-          new MouseEvent("mouseup", {
-            clientX: cx + dx, clientY: cy + dy, bubbles: true,
-          })
-        );
+        el.dispatchEvent(new MouseEvent("mousedown", { clientX: cx, clientY: cy, bubbles: true }));
+        el.dispatchEvent(new MouseEvent("mousemove", { clientX: cx + dx, clientY: cy + dy, bubbles: true }));
+        el.dispatchEvent(new MouseEvent("mouseup", { clientX: cx + dx, clientY: cy + dy, bubbles: true }));
       }, 1500);
     }, 5000);
   }, 3000);
 }
 
-// Speed test: click start, wait
+// Generic speedtest: textContent heuristic (used for Cloudflare)
 function _speedtest(dwellMs) {
   setTimeout(function () {
     try {
@@ -513,7 +454,43 @@ function _speedtest(dwellMs) {
   }, dwellMs - 3000);
 }
 
-// Complex CSS: slow scroll to trigger animations
+// Speedtest.net (Ookla): clicks a.js-start-test directly.
+// The GO button's visible text lives in a child <span class="start-text"> —
+// textContent scanning on the parent <a> misses it. Target the anchor
+// by its stable class instead.
+function _speedtestOokla(dwellMs) {
+  setTimeout(function () {
+    try {
+      var btn = document.querySelector("a.js-start-test");
+      if (btn) {
+        btn.click();
+      } else {
+        // Fallback: Ookla occasionally restructures — try aria-label
+        var fallback = document.querySelector('[aria-label*="start speed test" i]');
+        if (fallback) fallback.click();
+      }
+    } catch (e) {}
+  }, 3000);
+  setTimeout(function () {
+    window.scrollBy({ top: 400, behavior: "smooth" });
+  }, dwellMs - 3000);
+}
+
+// LibreSpeed: clicks #start-button directly.
+// Button is present in static HTML but initializes as class="disabled" —
+// the JS enables it once a server is found (~1-2s). 4s wait covers this.
+function _librespeed(dwellMs) {
+  setTimeout(function () {
+    try {
+      var btn = document.querySelector("#start-button");
+      if (btn) btn.click();
+    } catch (e) {}
+  }, 4000);
+  setTimeout(function () {
+    window.scrollBy({ top: 400, behavior: "smooth" });
+  }, dwellMs - 3000);
+}
+
 function _complexCss(dwellMs) {
   var end = Date.now() + dwellMs;
   function tick() {
@@ -527,7 +504,6 @@ function _complexCss(dwellMs) {
         bubbles: true,
       })
     );
-    // Longer pauses ~25% of the time for CSS transitions
     var delay = Math.random() < 0.25
       ? 3000 + Math.random() * 2000
       : 1500 + Math.random() * 600;
@@ -536,14 +512,104 @@ function _complexCss(dwellMs) {
   tick();
 }
 
-// Static: single slow scroll pass
+// Duck.ai: dismiss onboarding modal, select Claude Haiku 4.5, submit a
+// prompt that elicits a long streaming response.
+// Exercises: React reconciler, streaming DOM mutation, font shaping,
+// smooth-scroll on a tall response.
+// Falls back gracefully if any step misses — _exerciseHotPaths still runs
+// for the full dwell regardless.
+function _duckai(dwellMs) {
+  var end = Date.now() + dwellMs;
+
+  // Step 1 — Dismiss "Agree and Continue" modal (stable data-testid)
+  setTimeout(function () {
+    try {
+      var btn = document.querySelector('[data-testid="DUCKAI_ONBOARDING_AGREE"]');
+      if (btn) btn.click();
+    } catch (e) {}
+  }, 2000);
+
+  // Step 2 — Open model picker
+  setTimeout(function () {
+    try {
+      var btn = document.querySelector('button[data-testid="model-select-button"]');
+      if (btn) btn.click();
+    } catch (e) {}
+  }, 4000);
+
+  // Step 3 — Click Haiku 4.5 radio label (stable for= attribute)
+  setTimeout(function () {
+    try {
+      var label = document.querySelector('label[for="claude-haiku-4-5"]');
+      if (label) label.click();
+    } catch (e) {}
+  }, 6000);
+
+  // Step 4 — Confirm with "Start New Chat"
+  setTimeout(function () {
+    try {
+      var btns = document.querySelectorAll('button');
+      for (var i = 0; i < btns.length; i++) {
+        if (btns[i].textContent.trim() === 'Start New Chat') {
+          btns[i].click();
+          break;
+        }
+      }
+    } catch (e) {}
+  }, 7500);
+
+  // Step 5 — Type prompt via React synthetic event
+  // Direct .value= assignment is silently ignored by React controlled inputs;
+  // nativeInputValueSetter bypasses the React wrapper and fires a real
+  // input event that React's reconciler actually picks up.
+  setTimeout(function () {
+    try {
+      var textarea = document.querySelector('textarea[name="user-prompt"]');
+      if (textarea) {
+        textarea.focus();
+        var setter = Object.getOwnPropertyDescriptor(
+          window.HTMLTextAreaElement.prototype, 'value'
+        ).set;
+        setter.call(textarea,
+          'Please explain in detail how Firefox\'s SpiderMonkey JavaScript engine ' +
+          'works, covering the interpreter, baseline JIT compiler, IonMonkey ' +
+          'optimizing compiler, garbage collector, and how they interact during ' +
+          'real-world page execution. Include how type inference and ' +
+          'deoptimization work.'
+        );
+        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    } catch (e) {}
+  }, 10000);
+
+  // Step 6 — Submit
+  setTimeout(function () {
+    try {
+      var textarea = document.querySelector('textarea[name="user-prompt"]');
+      if (textarea) {
+        textarea.dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', bubbles: true })
+        );
+      }
+    } catch (e) {}
+  }, 11500);
+
+  // Step 7 — Scroll streaming response
+  setTimeout(function () {
+    var remaining = end - Date.now();
+    if (remaining > 5000) {
+      var si = setInterval(function () {
+        if (Date.now() >= end) { clearInterval(si); return; }
+        window.scrollBy({ top: 200, behavior: 'smooth' });
+      }, 3000);
+    }
+  }, 15000);
+}
+
 function _static(dwellMs) {
   var end = Date.now() + dwellMs;
   var si = setInterval(function () {
-    if (Date.now() >= end) {
-      clearInterval(si);
-      return;
-    }
+    if (Date.now() >= end) { clearInterval(si); return; }
     var px = 250 + Math.floor(Math.random() * 100);
     window.scrollBy({ top: px, behavior: "smooth" });
   }, 2000 + Math.random() * 600);
@@ -553,16 +619,19 @@ function _static(dwellMs) {
 // Behavior dispatch
 // ---------------------------------------------------------------------------
 const BEHAVIORS = {
-  long_read: _longRead,
-  video: _video,
+  long_read:         _longRead,
+  video:             _video,
   video_late_scroll: _videoLateScroll,
-  ecommerce: _ecommerce,
-  spa: _spa,
-  apnews: _apnewsRead,
-  map: _map,
-  speedtest: _speedtest,
-  complex_css: _complexCss,
-  static: _static,
+  ecommerce:         _ecommerce,
+  spa:               _spa,
+  apnews:            _apnewsRead,
+  map:               _map,
+  speedtest:         _speedtest,
+  speedtest_ookla:   _speedtestOokla,  // Ookla-specific: targets a.js-start-test
+  librespeed:        _librespeed,      // LibreSpeed-specific: targets #start-button
+  complex_css:       _complexCss,
+  duckai:            _duckai,          // consent + Haiku 4.5 + SpiderMonkey prompt
+  static:            _static,
 };
 
 // ---------------------------------------------------------------------------
@@ -576,8 +645,6 @@ async function injectBehavior(tabId, behavior, dwellSeconds) {
     behaviorFn = _static;
   }
 
-  // _ecommerce, _spa, and _apnewsRead call _longRead internally, so inject
-  // it as a dependency when those behaviors are selected
   var code;
   if (behavior === "ecommerce" || behavior === "spa" || behavior === "apnews") {
     code =
@@ -609,7 +676,6 @@ async function runTraining() {
     Math.floor(totalDwell / 60) + " minutes"
   );
 
-  // Get the active tab (opened on about:blank by profileserver.py)
   var tabs = await browser.tabs.query({ active: true, currentWindow: true });
   if (!tabs.length) {
     log("ERROR: No active tab found");
@@ -634,18 +700,10 @@ async function runTraining() {
     try {
       await browser.tabs.update(tabId, { url: url });
       await waitForTabLoad(tabId);
-
-      // Initial page settle
       await sleep(3000);
-
-      // Inject and run behavior + hot-path exercisers
       await injectBehavior(tabId, behavior, dwell);
-
-      // Wait for the behavior to complete
       await sleep(dwell * 1000);
 
-      // Exercise extension storage API (real-world hot path:
-      // every user with uBlock/Bitwarden/etc. hits this)
       try {
         await browser.storage.local.set({
           pgo_last_url: url,
@@ -671,7 +729,6 @@ async function runTraining() {
     elapsed + " minutes elapsed"
   );
 
-  // Clean shutdown via Quitter.quit() on a localhost-served page
   log("Navigating to pgo_done.html for clean shutdown...");
   try {
     await browser.tabs.update(tabId, {
