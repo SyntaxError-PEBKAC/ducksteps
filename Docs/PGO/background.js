@@ -33,6 +33,7 @@ const SITES = [
   ["https://www.speedtest.net", "speedtest", 75],
   ["https://librespeed.org", "speedtest", 45],
   ["https://speed.cloudflare.com", "speedtest", 72],
+  ["http://localhost:8000/InteractiveRunner.html", "speedtest", 120],
 
   // JS-HEAVY SPAs — SpiderMonkey JIT, GC, DOM mutation
   ["https://duck.ai", "spa", 25],
