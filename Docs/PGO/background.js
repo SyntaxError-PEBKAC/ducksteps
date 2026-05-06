@@ -19,7 +19,7 @@ const PAGE_LOAD_TIMEOUT = 30000;
 // ---------------------------------------------------------------------------
 // Site corpus: [url, behavior, dwell_seconds]
 // Sorted by PGO impact (high -> low) within each category.
-// Total estimated runtime: ~130 minutes.
+// Total estimated runtime: ~135 minutes.
 // LAST UPDATED 05/MAY/2026
 // ---------------------------------------------------------------------------
 const SITES = [
@@ -32,9 +32,9 @@ const SITES = [
 
   // SPEED TESTS — canvas rendering + network stack
   ["https://www.speedtest.net", "speedtest_ookla", 75],          // dedicated behavior: clicks a.js-start-test
-  ["https://librespeed.org", "librespeed", 45],                   // dedicated behavior: clicks #start-button
+  ["https://librespeed.org", "librespeed", 45],                   // dedicated behavior: clicks #start-button, retries at 6s
   ["https://speed.cloudflare.com", "speedtest", 72],              // generic heuristic still fine here
-  ["http://localhost:8000/InteractiveRunner.html?startAutomatically=true", "static", 120], // Speedometer 3 — auto-fires via URL param, no click needed
+  ["http://localhost:8000/InteractiveRunner.html?startAutomatically=true", "static", 285], // Speedometer 3 — auto-fires via URL param; ~3.5min on 9950X3D, 4:45 dwell for headroom
 
   // JS-HEAVY SPAs — SpiderMonkey JIT, GC, DOM mutation
   ["https://duck.ai", "duckai", 90],                              // consent dismiss + Haiku 4.5 + SpiderMonkey prompt
@@ -44,7 +44,7 @@ const SITES = [
   ["https://redlib.catsarch.com/", "spa", 90],
   ["https://redlib.catsarch.com/r/pics/comments/haucpf/ive_found_a_few_funny_memories_during_lockdown/", "spa", 182],
   ["https://react.dev/learn", "spa", 85],
-  ["https://www.airbnb.com/s/Tokyo/homes", "spa", 35],
+  ["https://www.airbnb.com/s/Tokyo/homes", "airbnb", 35],        // dedicated behavior: dismisses popup before scrolling
   ["https://netflix.com", "spa", 45],
   ["https://angular.dev/overview", "spa", 40],
   ["https://vuejs.org/guide/essentials/component-basics.html", "spa", 73],
@@ -276,6 +276,9 @@ function _longRead(dwellMs) {
   cycle();
 }
 
+// Video: play, scroll comments at 60% of dwell.
+// Fullscreen removed — ads and interstitials on YouTube/Twitch/etc. block
+// the request or trap the browser in a broken state.
 function _video(dwellMs) {
   setTimeout(function () {
     try {
@@ -294,6 +297,8 @@ function _video(dwellMs) {
   }, scrollStart);
 }
 
+// Video with fixed 70s scroll delay — gives YouTube enough watch-time
+// before scrolling comments. Fullscreen removed (same reason as _video).
 function _videoLateScroll(dwellMs) {
   setTimeout(function () {
     try {
@@ -401,6 +406,37 @@ function _apnewsRead(dwellMs) {
   }, 5000);
 }
 
+// Airbnb: dismiss the "Got it" / X popup that blocks scrolling on load,
+// then hand off to _spa for the remainder.
+function _airbnb(dwellMs) {
+  var end = Date.now() + dwellMs;
+  setTimeout(function () {
+    try {
+      var btns = document.querySelectorAll('button');
+      var dismissed = false;
+      for (var i = 0; i < btns.length; i++) {
+        var t = btns[i].textContent.trim().toLowerCase();
+        if (t === 'got it' || t === 'ok' || t === 'okay' || t === 'close') {
+          btns[i].click();
+          dismissed = true;
+          break;
+        }
+      }
+      if (!dismissed) {
+        var closeBtn = document.querySelector(
+          '[aria-label*="close" i], [aria-label*="dismiss" i], ' +
+          '[data-testid*="close" i], [data-testid*="dismiss" i]'
+        );
+        if (closeBtn) closeBtn.click();
+      }
+    } catch (e) {}
+  }, 3000);
+  setTimeout(function () {
+    var remaining = end - Date.now();
+    if (remaining > 5000) _spa(remaining);
+  }, 5000);
+}
+
 function _map(dwellMs) {
   var end = Date.now() + dwellMs;
   setTimeout(function () {
@@ -465,7 +501,6 @@ function _speedtestOokla(dwellMs) {
       if (btn) {
         btn.click();
       } else {
-        // Fallback: Ookla occasionally restructures — try aria-label
         var fallback = document.querySelector('[aria-label*="start speed test" i]');
         if (fallback) fallback.click();
       }
@@ -477,15 +512,18 @@ function _speedtestOokla(dwellMs) {
 }
 
 // LibreSpeed: clicks #start-button directly.
-// Button is present in static HTML but initializes as class="disabled" —
-// the JS enables it once a server is found (~1-2s). 4s wait covers this.
+// Button initializes disabled until server ping completes (~1-2s).
+// Retries at 6s in case of slow server selection — double-click is safe
+// since the button is a no-op while disabled.
 function _librespeed(dwellMs) {
-  setTimeout(function () {
+  function tryClick() {
     try {
       var btn = document.querySelector("#start-button");
       if (btn) btn.click();
     } catch (e) {}
-  }, 4000);
+  }
+  setTimeout(tryClick, 4000);
+  setTimeout(tryClick, 6000);
   setTimeout(function () {
     window.scrollBy({ top: 400, behavior: "smooth" });
   }, dwellMs - 3000);
@@ -516,8 +554,6 @@ function _complexCss(dwellMs) {
 // prompt that elicits a long streaming response.
 // Exercises: React reconciler, streaming DOM mutation, font shaping,
 // smooth-scroll on a tall response.
-// Falls back gracefully if any step misses — _exerciseHotPaths still runs
-// for the full dwell regardless.
 function _duckai(dwellMs) {
   var end = Date.now() + dwellMs;
 
@@ -558,10 +594,9 @@ function _duckai(dwellMs) {
     } catch (e) {}
   }, 7500);
 
-  // Step 5 — Type prompt via React synthetic event
-  // Direct .value= assignment is silently ignored by React controlled inputs;
-  // nativeInputValueSetter bypasses the React wrapper and fires a real
-  // input event that React's reconciler actually picks up.
+  // Step 5 — Type prompt via React synthetic event.
+  // Direct .value= is silently ignored by React controlled inputs;
+  // nativeInputValueSetter bypasses the wrapper so the value actually sticks.
   setTimeout(function () {
     try {
       var textarea = document.querySelector('textarea[name="user-prompt"]');
@@ -582,17 +617,30 @@ function _duckai(dwellMs) {
     } catch (e) {}
   }, 10000);
 
-  // Step 6 — Submit
+  // Step 6 — Submit: Enter keydown first, send button as fallback 1s later.
   setTimeout(function () {
     try {
       var textarea = document.querySelector('textarea[name="user-prompt"]');
       if (textarea) {
         textarea.dispatchEvent(
-          new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', bubbles: true })
+          new KeyboardEvent('keydown', {
+            key: 'Enter', code: 'Enter', keyCode: 13,
+            which: 13, bubbles: true, cancelable: true
+          })
         );
       }
     } catch (e) {}
   }, 11500);
+
+  setTimeout(function () {
+    try {
+      var sendBtn =
+        document.querySelector('[aria-label*="send" i]') ||
+        document.querySelector('[aria-label*="submit" i]') ||
+        document.querySelector('button[type="submit"]');
+      if (sendBtn) sendBtn.click();
+    } catch (e) {}
+  }, 12500);
 
   // Step 7 — Scroll streaming response
   setTimeout(function () {
@@ -625,12 +673,13 @@ const BEHAVIORS = {
   ecommerce:         _ecommerce,
   spa:               _spa,
   apnews:            _apnewsRead,
+  airbnb:            _airbnb,           // popup dismiss + spa scroll
   map:               _map,
   speedtest:         _speedtest,
-  speedtest_ookla:   _speedtestOokla,  // Ookla-specific: targets a.js-start-test
-  librespeed:        _librespeed,      // LibreSpeed-specific: targets #start-button
+  speedtest_ookla:   _speedtestOokla,   // Ookla-specific: targets a.js-start-test
+  librespeed:        _librespeed,       // LibreSpeed-specific: #start-button, retries at 6s
   complex_css:       _complexCss,
-  duckai:            _duckai,          // consent + Haiku 4.5 + SpiderMonkey prompt
+  duckai:            _duckai,           // consent + Haiku 4.5 + SpiderMonkey prompt
   static:            _static,
 };
 
@@ -647,8 +696,16 @@ async function injectBehavior(tabId, behavior, dwellSeconds) {
 
   var code;
   if (behavior === "ecommerce" || behavior === "spa" || behavior === "apnews") {
+    // These call _longRead internally — inject it as a dependency
     code =
       "var _longRead = " + _longRead.toString() + ";\n" +
+      "(" + _exerciseHotPaths.toString() + ")(" + dwellMs + ");\n" +
+      "(" + behaviorFn.toString() + ")(" + dwellMs + ");";
+  } else if (behavior === "airbnb") {
+    // _airbnb calls _spa which calls _longRead — inject both
+    code =
+      "var _longRead = " + _longRead.toString() + ";\n" +
+      "var _spa = " + _spa.toString() + ";\n" +
       "(" + _exerciseHotPaths.toString() + ")(" + dwellMs + ");\n" +
       "(" + behaviorFn.toString() + ")(" + dwellMs + ");";
   } else {
