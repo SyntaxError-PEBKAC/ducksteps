@@ -2,7 +2,7 @@
  * ==========================================
  * WebExtension that drives an instrumented Firefox build through realistic
  * browsing patterns to produce high-quality LLVM profile data.
- *
+ * Located at: D:\ducksteps\mozilla-source\ducksteps\build\pgo\pgo_training_extension\background.js
  * Loaded into the PGO profiling phase via profileserver.py.
  * Runs the full site corpus with scroll behaviors and hot-path exercisers,
  * then navigates to pgo_done.html which calls Quitter.quit() for clean
