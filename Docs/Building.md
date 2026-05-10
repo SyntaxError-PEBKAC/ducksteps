@@ -9,6 +9,7 @@
 | Legacy objdir | `D:\ducksteps\ducksteps-obj\esr1XX-Legacy` |
 | rcedit | `C:\Users\User\.mozbuild\rcedit\rcedit-x64.exe` |
 | package.sh | `D:\ducksteps\mozilla-source\ducksteps\package.sh` |
+| background.js | `D:\ducksteps\mozilla-source\ducksteps\build\pgo\pgo_training_extension\background.js" |
 
 ---
 
@@ -58,7 +59,7 @@ Expected output includes `Your branch and 'origin/esr1XX' have diverged` — tha
 
 ```bash
 git stash                                        # only if you have unstaged changes
-git rebase FIREFOX_1XX_X_XeXXX_RELEASE
+git rebase FIREFOX_1XX_X_X_RELEASE
 git stash pop                                    # if you stashed
 ```
 
@@ -149,18 +150,13 @@ Output filename: `ducksteps.1XX.X.X.Standalone.7z`
 
 ---
 
-## #️⃣ Step 12 — Checksum both release files
+## #️⃣ Step 12 — Checksum and virus scan all release files
 
-In PowerShell:
+Right click each file, highlight 7-Zip, highlight CRC SHA, click SHA-512, double click SHA512 result, double click SHA512 text, right click and copy/paste it to Release Notes.
 
-```powershell
-Get-FileHash "ducksteps.1XX.X.X.Setup.exe" -Algorithm SHA256
-Get-FileHash "ducksteps.1XX.X.X.Standalone.7z" -Algorithm SHA256
-```
+Submit all files to [VirusTotal](https://www.virustotal.com). Save the result URLs — they go in the release notes.
 
-Submit both to [VirusTotal](https://www.virustotal.com). Save the result URLs — they go in the release notes.
-
-Expected: zero flags. If you see flags on Setup.exe, investigate.
+Expected: zero flags. If you see flags on any files, investigate.
 
 ---
 
@@ -196,10 +192,10 @@ export OBJDIR="D:/ducksteps/ducksteps-obj/esr1XX"
 ## 🚀 Step 14 — Publish on GitHub
 
 1. Repo → **Releases** → **Draft a new release**
-2. **Choose a tag** → type the new version (e.g. `140.10.1`) → **Create new tag on publish**
+2. **Choose a tag** → type the new version (e.g. `140.10.2`) → **Create new tag on publish**
 3. Title follows release name style (e.g. `⛐ It's the "..." release:`)
-4. Attach all 4 files
-5. Include SHA256 hashes and VirusTotal links in release notes
+4. Attach all files
+5. Include SHA512 hashes and VirusTotal links in release notes
 6. Publish
 7. Update `Changelog.md` in `/docs/`
 
@@ -207,13 +203,9 @@ export OBJDIR="D:/ducksteps/ducksteps-obj/esr1XX"
 
 ## ☑️ Release Checklist
 
-- [ ] `version.txt` and `version_display.txt` show the correct new version
 - [ ] Build completed without fatal errors
 - [ ] `./mach run` launches with correct ducksteps branding (no Nightly purple)
 - [ ] `package.sh` completed and installer is ~72 MB (not under 1 MB)
-- [ ] Both files checksummed and submitted to VirusTotal
-- [ ] Zero unexpected VT flags
-- [ ] Release notes include SHA256 hashes and VirusTotal links for both files
 - [ ] `Changelog.md` updated
 
 ---
@@ -225,6 +217,6 @@ export OBJDIR="D:/ducksteps/ducksteps-obj/esr1XX"
 - **NSIS warnings 6010, 6012, 9000** are pre-existing upstream noise. Ignore them.
 - **`rcedit-x64.exe`** is correct for win64. The x86 binary in the same folder is unused.
 - **`instrumented/`** in the objdir is the PGO training binary. Never distribute from it.
-- **UPX is intentionally disabled** on the SFX stub (`exe_7z_archive.py` patch). UPX 5.x triggered Malwarebytes AI false positives at every compression level tested. The stub is ~230KB — the size savings weren't worth the VT noise. This patch is committed to the branch and survives rebases automatically.
+- **UPX is intentionally disabled** on the SFX stub (`exe_7z_archive.py` patch). UPX 5.x triggered Malwarebytes AI false positives at every compression level tested. The stub is ~230KB — the size savings weren't worth the VirusTotal noise. This patch is committed to the branch and survives rebases automatically.
 - **PGO log location:** `D:/ducksteps/ducksteps-obj/esr1XX/instrumented/pgo_logs/profile-run-2.log`
 - **LLVM Profile Errors** in the PGO log about "temporal profiles do not support merging at runtime" are expected. Not data loss — ignore them.
