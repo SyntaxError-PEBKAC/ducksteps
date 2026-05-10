@@ -20,7 +20,7 @@ const PAGE_LOAD_TIMEOUT = 30000;
 // Site corpus: [url, behavior, dwell_seconds]
 // Sorted by PGO impact (high -> low) within each category.
 // Total estimated runtime: ~135 minutes.
-// LAST UPDATED 05/MAY/2026
+// LAST UPDATED 10/MAY/2026
 // ---------------------------------------------------------------------------
 const SITES = [
   // VIDEO PLAYBACK — codec + compositor + audio sync
