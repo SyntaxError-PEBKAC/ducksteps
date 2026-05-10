@@ -104,7 +104,7 @@ Expected: `1XX.X.X` and `1XX.X.Xesr`. If either shows the old version, the rebas
 
 The PGO flow runs automatically:
 1. Instrumented build compiles
-2. Firefox launches and runs the 87-site training corpus (~120 min) — do not interrupt
+2. Firefox launches and runs the 87-site training corpus (~135 min) — do not interrupt
 3. Optimized build compiles using profile data
 
 Done when you see `your build finally finished successfully!`
