@@ -4,7 +4,20 @@ All releases of ducksteps. Newest first.
 
 ---
 
-## [140.10.1] — 2026-04-29
+## [140.10.2] — 10/May/2026
+
+⛐ It's the "patch Tuesday came early" release!
+
+🔄 Updated to Firefox ESR 140.10.2.
+
+🛡️ Addressed three high-severity CVEs from Mozilla Foundation Security Advisory 2026-41 (May 7, 2026): CVE-2026-8090 (use-after-free in the DOM/networking component), CVE-2026-8094 (issue in the WebRTC component), and CVE-2026-8092 (memory safety bugs with plausible RCE potential, shared across ESR 115.35.2, 140.10.2, and Firefox 150.0.2). Nothing critical this cycle — no sandbox escapes, no active exploitation reported — but the memory safety batch alone is reason enough to ship.
+
+🧠 This is the 8th PGO training refinement. Three iterations this release focused on automating the corpus run end-to-end. Turns out auto-fullscreen on video sites is genuinely cursed... ad timing is inconsistent enough across YouTube, Twitch, and DailyMotion that any reliable automation would need per-site ad-skip logic and timing jitter I don't want to maintain. Fullscreen clicks are manual for now, which is fine; the duck doesn't care who clicked the button, only that the video codec paths got exercised.
+
+---
+
+## [140.10.1] — 29/April/2026
+
 ⛐ It's the "memory corruption and really long build days" release:
 
 🔄 Updated to Firefox ESR 140.10.1.
@@ -19,7 +32,8 @@ All releases of ducksteps. Newest first.
 
 ---
 
-## [140.10.0] — 2026-04-21
+## [140.10.0] — 21/April/2026
+
 ⛐ It's the "the duck went to the gym" release:
 
 🔄 Updated to Firefox ESR 140.10.0. Picked up today's upstream security patch.
@@ -46,7 +60,8 @@ All releases of ducksteps. Newest first.
 
 ---
 
-## [140.9.1] — 2026-04-09
+## [140.9.1] — 09/April/2026
+
 ⛐ It's the "security patch, everyone's welcome!" release:
 
 🔄  Updated to Firefox ESR 140.9.1. Just Mozilla patching things that needed patching.
@@ -62,7 +77,8 @@ In practice that covers most Intel chips from Broadwell (2014) onward and most A
 
 ---
 
-## [140.9.0] — 2026-03-25
+## [140.9.0] — 25/March/2026
+
 ⛐ It's the "homework turned in on time" release:
 
 🔄  Updated to Firefox ESR 140.9.0 release build (stable over latest-available).
@@ -75,7 +91,8 @@ In practice that covers most Intel chips from Broadwell (2014) onward and most A
 
 ---
 
-## [140.8.0_PGO] — 2026-02-14
+## [140.8.0_PGO] — 14/February/2026
+
 ⛐ It's the "my bad, PGO was off!" release:
 
 🔄  Updated to latest upstream ESR 140.x files.
@@ -90,7 +107,8 @@ In practice that covers most Intel chips from Broadwell (2014) onward and most A
 
 ---
 
-## [140.8.0] — 2026-01-31
+## [140.8.0] — 31/January/2026
+
 ⛐ It's the "I DID A THING!" release:
 
 🌐  Renamed Nightly to Ryfox.
@@ -115,7 +133,8 @@ In practice that covers most Intel chips from Broadwell (2014) onward and most A
 
 ---
 
-## [v1.0.0] — 2025-12-09
+## [v1.0.0] — 09/December/2025
+
 Initial alpha release. Shipped as "Ryfox 1.0.0."
 
 🦊  Built on Firefox Nightly 142.0a1 (2025-12-08).
