@@ -9,7 +9,7 @@
 | Legacy objdir | `D:\ducksteps\ducksteps-obj\esr1XX-Legacy` |
 | rcedit | `C:\Users\User\.mozbuild\rcedit\rcedit-x64.exe` |
 | package.sh | `D:\ducksteps\mozilla-source\ducksteps\package.sh` |
-| background.js | `D:\ducksteps\mozilla-source\ducksteps\build\pgo\pgo_training_extension\background.js" |
+| background.js | `D:\ducksteps\mozilla-source\ducksteps\build\pgo\pgo_training_extension\background.js` |
 
 ---
 
