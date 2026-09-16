@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 from fnmatch import fnmatch
@@ -311,13 +312,18 @@ def commit_push_tag(repo_dir, version, logger=None) -> None:
             logger.info("tag %s already points at %s, nothing to do", version, head[:12])
         return
 
+    # -m explicitly: tag.gpgsign=true (see Docs, all release tags are SSH-signed) forces
+    # annotation, and an annotated tag with no message opens $EDITOR. Unattended, there is
+    # no editor to open, and git fails outright with "fatal: no tag message?" - confirmed
+    # directly during 153.2.0's manual recovery. Passing -m sidesteps needing an editor at all.
+    message = f"Release {version}"
     if existing:
         if logger:
             logger.warning("tag %s points at %s, moving it to %s", version, existing[:12], head[:12])
-        _run_git(["tag", "-f", version], repo_dir, logger=logger)
+        _run_git(["tag", "-f", "-m", message, version], repo_dir, logger=logger)
         _run_git(["push", "-f", "origin", version], repo_dir, logger=logger)
     else:
-        _run_git(["tag", version], repo_dir, logger=logger)
+        _run_git(["tag", "-m", message, version], repo_dir, logger=logger)
         _run_git(["push", "origin", version], repo_dir, logger=logger)
     if logger:
         logger.info("committed, pushed, and tagged %s in %s", version, repo_dir)
@@ -402,13 +408,191 @@ def recent_release_titles(repo_slug, limit=2, logger=None) -> list:
     return titles
 
 
-# --- Cleanup sweep: em dashes, emoji spacing, changelog header shape ---
-# Idempotent by construction: every pattern below only matches the OLD shape (em dash
-# separator in the changelog header, double space after emoji). An already-swept line
-# doesn't match and passes through unchanged, so re-running this is always safe.
+# --- 9. The draft round trip ---
+#
+# The GitHub draft, not the text rendered at ADVISORY, is the source of truth for a
+# release's prose from Gate 2 onwards. The generated notes are a first draft: every release
+# so far has been hand-edited in the browser before going out (153.2.0 grew a "ducksteps
+# specific changes:" heading, turned raw commit subjects into written-out bullets, and cut
+# the drafted summary roughly in half). Nothing read those edits back, so approving at Gate
+# 2 would have committed the SUPERSEDED text to Docs/Changelog.md and tagged it - which is
+# why the last two releases were rejected at Gate 2 and finished by hand instead.
+#
+# Reading the draft back at publish time makes "edit it in the browser, then tap Publish"
+# the normal path rather than the thing that breaks the pipeline.
 
-_EMOJI_DOUBLE_SPACE = re.compile(r"(🔄|🛡️|✅|🚨|🌐|🏞️|💾|🚄|🐞|🪨|🗜️|💯|⛐|🤷🏽‍♂️)[ \t]{2,}")
+
+def _run_gh(args, timeout=60, logger=None) -> str:
+    result = subprocess.run(
+        ["gh", *args], capture_output=True, text=True,
+        encoding="utf-8", errors="replace", timeout=timeout,
+    )
+    if result.returncode != 0:
+        message = f"gh {' '.join(args)} failed: {result.stderr.strip()}"
+        if logger:
+            logger.error(message)
+        raise PublishError(message)
+    return result.stdout
+
+
+def find_release_id(repo_slug, version, logger=None) -> int | None:
+    """Numeric id of the release whose tag_name is `version`, draft or not.
+
+    The LIST endpoint deliberately, not "get a release by tag name": a draft has no git tag
+    yet, only a tag_name field on the release object, and GitHub's by-tag endpoint does not
+    serve drafts. The list endpoint does return them to a caller with push access, which is
+    who runs this. Everything that has to reach a DRAFT (reading the edited body back,
+    pushing the normalized text) therefore goes by id, which is unambiguous.
+    """
+    output = _run_gh(
+        ["api", f"repos/{repo_slug}/releases", "--paginate",
+         "--jq", f'.[] | select(.tag_name=="{version}") | .id'],
+        logger=logger,
+    )
+    ids = [line.strip() for line in output.splitlines() if line.strip()]
+    if not ids:
+        if logger:
+            logger.warning("no release found in %s with tag_name %s", repo_slug, version)
+        return None
+    if len(ids) > 1 and logger:
+        logger.warning("%d releases in %s share tag_name %s, using the first (%s)",
+                       len(ids), repo_slug, version, ids[0])
+    return int(ids[0])
+
+
+def fetch_release(repo_slug, version, release_id=None, logger=None) -> dict:
+    """The release as GitHub currently holds it: {id, name, body, draft}.
+
+    Raises rather than falling back to the locally rendered text if this cannot be read.
+    The whole point of the call is that the local copy may be stale, so quietly substituting
+    it would reintroduce exactly the mismatch this exists to prevent - and PUBLISH is
+    re-runnable (`--resume`), so halting on a transient failure costs one tap, not a release.
+    """
+    if release_id is None:
+        release_id = find_release_id(repo_slug, version, logger=logger)
+    if release_id is None:
+        raise PublishError(f"cannot find a release tagged {version} in {repo_slug} to publish")
+
+    data = json.loads(_run_gh(["api", f"repos/{repo_slug}/releases/{release_id}"], logger=logger))
+    return {
+        "id": data["id"],
+        # A release created with an empty body comes back as JSON null, not "".
+        "name": data.get("name") or "",
+        "body": data.get("body") or "",
+        "draft": bool(data.get("draft")),
+    }
+
+
+def update_release_text(repo_slug, release_id, title, body, logger=None) -> None:
+    """Write title/body back to the release, by id so it works on a draft."""
+    _run_gh(
+        ["api", "-X", "PATCH", f"repos/{repo_slug}/releases/{release_id}",
+         "-f", f"name={title}", "-f", f"body={body}"],
+        logger=logger,
+    )
+    if logger:
+        logger.info("updated release %s text in %s", release_id, repo_slug)
+
+
+# GitHub normalizes a release body to CRLF on the way out. Everything downstream of a fetch
+# (comparison against the rendered text, the changelog entry, the local release_notes.md)
+# expects LF, and a body that only differs by line endings must not read as "Tim edited it".
+def normalize_newlines(text: str) -> str:
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
+_SHA512_MARKER = "✅ SHA512"
+_HORIZONTAL_RULE = "---"
+
+
+def strip_artifact_sections(release_body, logger=None) -> str:
+    """The prose half of a release body: everything above the SHA512 block.
+
+    A release body is prose, then "---", then the SHA512 list, then "---", then the
+    VirusTotal list. The changelog entry is the same prose under a version heading and
+    nothing else (checked against every entry in Docs/Changelog.md). So deriving one from
+    the other is a single cut, and the cut is anchored on the SHA512 marker rather than on
+    "the first ---" because hand-written prose is free to contain its own divider.
+
+    The blank lines and the divider immediately preceding the marker are eaten with it -
+    they belong to the artifact block, and 153.2.0's hand-edited body proves the blank line
+    between the prose and that divider cannot be assumed present.
+    """
+    lines = normalize_newlines(release_body).splitlines()
+
+    cut = next((i for i, line in enumerate(lines) if line.strip().startswith(_SHA512_MARKER)), None)
+    if cut is None:
+        # The marker is generated, never typed, so losing it means the body was restructured
+        # by hand well beyond a wording tweak. Fall back to the last standalone divider,
+        # which still separates prose from artifacts in any layout resembling the template,
+        # and say so loudly - a wrong cut here shows up as a wrong changelog entry, and this
+        # log line is what explains it.
+        rules = [i for i, line in enumerate(lines) if line.strip() == _HORIZONTAL_RULE]
+        if not rules:
+            if logger:
+                logger.warning(
+                    "release body has no %r marker and no divider; using the whole body as "
+                    "the changelog entry - check Docs/Changelog.md before pushing",
+                    _SHA512_MARKER,
+                )
+            return "\n".join(lines).rstrip() + "\n"
+        cut = rules[-1]
+        if logger:
+            logger.warning(
+                "release body has no %r marker; cutting the changelog entry at the last "
+                "divider (line %d) instead - check Docs/Changelog.md before pushing",
+                _SHA512_MARKER, cut + 1,
+            )
+
+    while cut > 0 and (not lines[cut - 1].strip() or lines[cut - 1].strip() == _HORIZONTAL_RULE):
+        cut -= 1
+    return "\n".join(lines[:cut]).rstrip() + "\n"
+
+
+def changelog_entry_from_release(release_body, release_title, version, release_date, logger=None) -> str:
+    """Rebuild the changelog entry from the release as published.
+
+    Mirrors render.render_changelog_entry's shape (version heading, title line, then the
+    same prose the release body carries) but sources the prose from GitHub instead of from
+    ReleaseData, so a hand-edited release and its changelog entry cannot drift apart.
+    """
+    prose = strip_artifact_sections(release_body, logger=logger)
+    return f"## [{version}] ({release_date})\n\n{release_title.strip()}\n\n{prose}"
+
+
+CHANGELOG_HEADER_WITH_DATE = re.compile(r"^## \[([^\]]+)\]\s*\(([^)]*)\)")
+
+
+def changelog_entry_date(entry_text, default) -> str:
+    """The date already stamped on a rendered changelog entry, or `default`."""
+    match = CHANGELOG_HEADER_WITH_DATE.match(entry_text or "")
+    return match.group(2) if match else default
+
+
+# --- Cleanup sweep: em dashes, smart quotes, spacing, changelog header shape ---
+# Idempotent by construction: every pattern below only matches the OLD shape (em dash
+# separator in the changelog header, a run of spaces mid-line, a curly quote). An
+# already-swept document doesn't match and passes through unchanged, so re-running this is
+# always safe - which matters now that the sweep runs over text a human just edited, on a
+# phase that can be re-entered with --resume.
+
 _CHANGELOG_HEADER = re.compile(r"^## \[([^\]]+)\]\s*[—–]\s*(.+)$", re.MULTILINE)
+
+# Fenced blocks and inline code spans are masked out of every prose fix below. The SHA512
+# section is 128-character hashes in backticks: collapsing spaces or rewriting quotes inside
+# one would corrupt a checksum, which is the one thing in these documents that has to be
+# byte-exact.
+_CODE_SPAN = re.compile(r"```.*?```|`[^`\n]*`", re.DOTALL)
+
+
+def _outside_code(text: str, transform) -> str:
+    parts, last = [], 0
+    for match in _CODE_SPAN.finditer(text):
+        parts.append(transform(text[last:match.start()]))
+        parts.append(match.group(0))
+        last = match.end()
+    parts.append(transform(text[last:]))
+    return "".join(parts)
 
 
 def normalize_changelog_header(text: str) -> str:
@@ -417,8 +601,59 @@ def normalize_changelog_header(text: str) -> str:
     return _CHANGELOG_HEADER.sub(r"## [\1] (\2)", text)
 
 
-def normalize_emoji_spacing(text: str) -> str:
-    return _EMOJI_DOUBLE_SPACE.sub(r"\1 ", text)
+# (?<=\S) and (?=\S) confine this to runs BETWEEN words: leading indentation (preceded by a
+# newline) and a trailing double space (followed by a newline, and a hard line break in
+# markdown) are both left alone.
+_INTERIOR_SPACE_RUN = re.compile(r"(?<=\S)[ \t]{2,}(?=\S)")
+
+
+def normalize_inline_spacing(text: str) -> str:
+    """Collapse mid-line runs of whitespace.
+
+    Replaces an older rule that only fired after a fixed list of emoji. That list was both
+    incomplete by construction (a release using a new emoji silently escaped it) and aimed
+    at the wrong cause: the doubled spaces in 153.2.0's published body were after a colon
+    ("PGO changes:  drop old.reddit.com"), typed on a phone, and no emoji rule was ever
+    going to catch that. Whoever fixed that entry by hand collapsed it to one space, so this
+    is the existing editorial convention, now enforced rather than remembered.
+    """
+    return _outside_code(text, lambda s: _INTERIOR_SPACE_RUN.sub(" ", s))
+
+
+# Typed on a phone with smart punctuation on, which is where the release notes are now
+# edited. 153.2.0 went out as: It's the “out of this world" release! - an opening curly
+# quote against a closing straight one, because the browser edit was made on mobile and the
+# generated text was not. Its changelog entry has straight quotes, again fixed by hand.
+_SMART_PUNCTUATION = str.maketrans({"“": '"', "”": '"', "‘": "'", "’": "'"})
+
+
+def normalize_quotes(text: str) -> str:
+    return _outside_code(text, lambda s: s.translate(_SMART_PUNCTUATION))
+
+
+def _collapse_dividers(text: str) -> str:
+    lines = text.split("\n")
+    out = []
+    for line in lines:
+        if line.strip() == "---":
+            previous = next((l for l in reversed(out) if l.strip()), None)
+            if previous is not None and previous.strip() == "---":
+                continue  # an identical rule already separates these two blocks
+        out.append(line)
+    return re.sub(r"\n{3,}", "\n\n", "\n".join(out))
+
+
+def normalize_dividers(text: str) -> str:
+    """One horizontal rule between two blocks, never a stack of them.
+
+    Two rules separated only by blank lines render as two grey lines with a gap, which is
+    never what anyone meant by it. The section boundaries in a release body are generated,
+    so this cannot come from render.py; it comes from editing the prose half by hand and
+    leaving (or adding) a rule that the block below already had. Blank-line runs are
+    collapsed in the same pass, since the same edit tends to leave those behind too and
+    markdown treats three blank lines as one anyway.
+    """
+    return _outside_code(text, _collapse_dividers)
 
 
 _MARKDOWN_LINK = re.compile(r"\[([^\]]*)\]\(([^)]*)\)")
@@ -471,12 +706,27 @@ def sweep_changelog_entry(text: str) -> str:
     text = normalize_changelog_header(text)
     text = link_bare_cve_mentions(text)
     text = common.strip_em_dashes(text)
-    text = normalize_emoji_spacing(text)
+    text = normalize_quotes(text)
+    text = normalize_inline_spacing(text)
+    text = normalize_dividers(text)
     return text if text.endswith("\n") else text + "\n"
 
 
 def sweep_release_body(text: str) -> str:
+    text = normalize_newlines(text)
     text = link_bare_cve_mentions(text)
     text = common.strip_em_dashes(text)
-    text = normalize_emoji_spacing(text)
+    text = normalize_quotes(text)
+    text = normalize_inline_spacing(text)
+    text = normalize_dividers(text)
     return text if text.endswith("\n") else text + "\n"
+
+
+def sweep_release_title(text: str) -> str:
+    """The release name gets the same prose rules as the body, minus the block-level ones.
+
+    It is edited in the same browser field and carries the same phone-keyboard artifacts:
+    153.2.0's title is the reason normalize_quotes exists. No trailing newline - this is a
+    single-line field, not a document.
+    """
+    return normalize_inline_spacing(normalize_quotes(common.strip_em_dashes(text))).strip()

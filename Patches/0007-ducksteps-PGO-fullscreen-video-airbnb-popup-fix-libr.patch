@@ -1,4 +1,4 @@
-From 7a2d502faad9fdd0602ad90ac35a83e385ea85f9 Mon Sep 17 00:00:00 2001
+From eed433a447bfdfd6fecd66fe46ba73ea9e8d24a7 Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Tue, 5 May 2026 19:37:21 -0700
 Subject: [PATCH 07/22] ducksteps PGO: fullscreen video, airbnb popup fix,
@@ -331,5 +331,5 @@ index 91dbc7a61bdb..ef3c67bdab3e 100644
      code =
        "(" + _exerciseHotPaths.toString() + ")(" + dwellMs + ");\n" +
 -- 
-2.52.0.windows.1
+2.49.0.windows.1
 

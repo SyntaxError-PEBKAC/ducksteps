@@ -93,6 +93,57 @@ def save_state(state: dict, path: Path = STATE_PATH) -> None:
     os.replace(tmp_path, path)
 
 
+def update_pending_status(version: str, status: str, path: Path = STATE_PATH) -> bool:
+    """Write back one field - pending_release.status - re-reading the file first.
+
+    Not save_state(state): the caller here is the watcher, which may have been sitting on an
+    approve-topic subscription for hours and whose in-memory state is correspondingly stale.
+    Writing that whole snapshot back would undo everything else that touched state.json in
+    the meantime, silently, which is the same failure mode SCHEDULER.md warns about for
+    hand-edits during a build.
+
+    Returns False (writing nothing) if the pending release has moved on to a different
+    version in the meantime - the decision being recorded is then about something that is no
+    longer the question.
+    """
+    state = load_state(path)
+    pending = state.get("pending_release")
+    if not pending or pending.get("version") != version:
+        return False
+    pending["status"] = status
+    pending["decided_at"] = datetime.now(timezone.utc).isoformat()
+    save_state(state, path)
+    return True
+
+
+def gate1_asked_at(pending: dict) -> str | None:
+    """When the Gate 1 question that is still outstanding was put, for replaying its answer.
+
+    Not simply last_notified_at. The watcher re-asks an unanswered Gate 1 on every run and
+    stamps last_notified_at with that re-ask, so anchoring there discards anything tapped
+    between the previous ask and this one - a tap five minutes before the 5pm run would be
+    thrown away by the 5pm run, which is the original "Approve does nothing" bug in a
+    narrower window. previous_notified_at is one ask back, which covers that gap and never
+    reaches further than a single watcher interval.
+    """
+    return pending.get("previous_notified_at") or pending.get("last_notified_at")
+
+
+def orchestrator_running(path: Path = LOCK_PATH) -> bool:
+    """True if an orchestrator process is alive and holding the lock right now.
+
+    Deliberately not Lock.acquire's fuller logic: this asks only "is someone building",
+    never reclaims a stale lock, and treats an unreadable or PID-less lockfile as "no",
+    because the only caller uses it to decide whether to keep its hands off state.json.
+    """
+    try:
+        info = json.loads(path.read_text(encoding="utf-8"))
+        pid = int(info["pid"])
+    except (OSError, ValueError, TypeError, KeyError, json.JSONDecodeError):
+        return False
+    return _pid_alive(pid)
+
+
 def _pid_alive(pid: int) -> bool:
     PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
     handle = ctypes.windll.kernel32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, pid)
@@ -218,7 +269,11 @@ class LockHeldError(RuntimeError):
 class Lock:
     """PID-based lockfile with a stale timeout, guarding against a second orchestrator instance."""
 
-    def __init__(self, path: Path = LOCK_PATH, stale_timeout_seconds: int = 24 * 3600):
+    # 72h, not 24: a live PID already blocks acquisition on its own, so this timeout only
+    # decides how long to trust a PID NUMBER that may since have been reused. A ~10h build
+    # followed by a Gate 2 held open for a day of note editing is now an ordinary run, and at
+    # 24h that run's own lock became reclaimable while it was still holding it.
+    def __init__(self, path: Path = LOCK_PATH, stale_timeout_seconds: int = 72 * 3600):
         self.path = path
         self.stale_timeout_seconds = stale_timeout_seconds
 

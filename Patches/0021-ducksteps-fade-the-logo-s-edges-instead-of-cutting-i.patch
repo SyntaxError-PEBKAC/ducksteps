@@ -1,4 +1,4 @@
-From 42b079043b435075852367fed7168dbc99a0c64a Mon Sep 17 00:00:00 2001
+From ff9c797ab74ca75fda96f41c7a0fc7e9fe51353a Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Mon, 31 Aug 2026 15:06:49 -0700
 Subject: [PATCH 21/22] ducksteps: fade the logo's edges instead of cutting it
@@ -19334,5 +19334,5 @@ index 000000000000..1619903212c8
 +if __name__ == "__main__":
 +    sys.exit(main())
 -- 
-2.52.0.windows.1
+2.49.0.windows.1
 

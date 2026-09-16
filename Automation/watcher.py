@@ -97,6 +97,55 @@ def send_gate1(config, logger, dry_run, version):
     notify.send_gate1(config, version)
 
 
+def listen_for_gate1(config, logger, dry_run, pending):
+    """Stay subscribed to the approve topic until Gate 1 is answered, and record the answer.
+
+    This is the half that was missing. The watcher used to send "ready to build" and exit
+    within the same second, and the only code that ever listened for the reply lived in the
+    orchestrator - which has no trigger and is started by hand. So between the notification
+    and someone walking to the PC, nothing on this machine was subscribed at all: tapping
+    Approve POSTed to a topic with no listener, and the tap went nowhere. From the phone that
+    is indistinguishable from a broken button, which is exactly how it was reported, twice.
+
+    Recording the outcome in state.json rather than acting on it is deliberate. A tap cannot
+    start the build: PGO training needs a real unlocked interactive session (Invariant 2), so
+    the pipeline is always launched at the machine. What the tap can do is mean something by
+    the time you get there, so the orchestrator starts building instead of re-asking a
+    question that was already answered hours ago.
+    """
+    version = pending["version"]
+    if dry_run:
+        logger.info("[dry-run] would listen for a Gate 1 response on %s", version)
+        return
+
+    if common.orchestrator_running():
+        # A build in progress owns state.json: it holds the whole file in memory and writes
+        # its own copy back at every phase boundary, so a status recorded here would be
+        # silently overwritten. Nothing is lost by sitting this one out - the orchestrator
+        # is the thing the approval is for, and it is already running.
+        logger.info("orchestrator is running, not listening for Gate 1 on %s in this run", version)
+        return
+
+    # Anchored at the question, not at this moment: the notification for this release may
+    # have gone out in an earlier run of this task, and ntfy will still hand back a tap made
+    # since then. That is what makes an approval given while nothing was subscribed count.
+    since = notify.anchor_from_iso(common.gate1_asked_at(pending))
+    outcome = notify.await_gate1_decision(config, version, logger=logger, since=since)
+
+    if outcome == "no_response":
+        logger.info("no Gate 1 response for %s, the next watcher run will re-ask", version)
+        return
+
+    status = "approved" if outcome == "approved" else "rejected"
+    if common.update_pending_status(version, status):
+        logger.info("recorded Gate 1 %s for %s", status, version)
+    else:
+        logger.warning(
+            "Gate 1 %s for %s, but state.json no longer has that version pending - not recording",
+            status, version,
+        )
+
+
 def check_point_release(config, logger, dry_run, state, source_dir, major, minor, patch) -> bool:
     """Returns True on success (even 'nothing new'), False if this cycle hit an error."""
     try:
@@ -135,6 +184,14 @@ def check_point_release(config, logger, dry_run, state, source_dir, major, minor
         else datetime.now(timezone.utc).isoformat()
     )
 
+    # The ask this re-ask replaces, kept so the reply window stays continuous across it.
+    # Only for the same version: a previous release's notification is not this one's question.
+    previous_notified_at = (
+        pending.get("last_notified_at")
+        if pending and pending.get("version") == candidate_version
+        else None
+    )
+
     if available:
         send_gate1(config, logger, dry_run, candidate_version)
         state["pending_release"] = {
@@ -143,6 +200,7 @@ def check_point_release(config, logger, dry_run, state, source_dir, major, minor
             "status": "awaiting_approval",
             "first_detected_at": first_detected_at,
             "last_notified_at": datetime.now(timezone.utc).isoformat(),
+            "previous_notified_at": previous_notified_at,
         }
     else:
         logger.info("release %s detected, tag %s not yet pushed, will retry", candidate_version, tag)
@@ -152,6 +210,7 @@ def check_point_release(config, logger, dry_run, state, source_dir, major, minor
             "status": "awaiting_tag",
             "first_detected_at": first_detected_at,
             "last_notified_at": pending.get("last_notified_at") if pending else None,
+            "previous_notified_at": previous_notified_at,
         }
     return True
 
@@ -159,6 +218,11 @@ def check_point_release(config, logger, dry_run, state, source_dir, major, minor
 def main() -> int:
     parser = argparse.ArgumentParser(description="ducksteps release watcher")
     parser.add_argument("--dry-run", action="store_true", help="log actions without sending notifications or saving state")
+    parser.add_argument(
+        "--no-listen", action="store_true",
+        help="poll upstream and exit immediately instead of staying subscribed for a Gate 1 "
+             "reply. The old behaviour, kept for a quick 'is there anything new' check.",
+    )
     args = parser.parse_args()
 
     config = common.load_config()
@@ -216,6 +280,15 @@ def main() -> int:
         logger.info("[dry-run] not persisting state.json")
     else:
         common.save_state(state)
+
+    # Only after the poll's own findings are on disk, and only as the last thing this run
+    # does: listening blocks for as long as the Gate 1 window lasts, and everything above
+    # has to be durable before that rather than hostage to it.
+    pending = state.get("pending_release")
+    if args.no_listen:
+        logger.info("--no-listen given, exiting without waiting for a Gate 1 reply")
+    elif pending and pending.get("status") == "awaiting_approval":
+        listen_for_gate1(config, logger, args.dry_run, pending)
 
     return 1 if had_error else 0
 

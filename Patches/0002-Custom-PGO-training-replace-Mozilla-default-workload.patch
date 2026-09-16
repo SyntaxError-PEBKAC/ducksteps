@@ -1,4 +1,4 @@
-From b3c7c0157b4e1d0eeea461c9c43898b30abefa70 Mon Sep 17 00:00:00 2001
+From 378d3b8a4dc6f5112b19a64b38492447b0b70aaf Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Mon, 13 Apr 2026 15:39:23 -0700
 Subject: [PATCH 02/22] Custom PGO training: replace Mozilla default workload
@@ -667,5 +667,5 @@ index 5e0c63f90e85..5770cff8aa4f 100644
  
          // Since PollPromise doesn't throw when timeout expires,
 -- 
-2.52.0.windows.1
+2.49.0.windows.1
 

@@ -1,6 +1,6 @@
 # ducksteps patch stack
 
-These are the commits that turn a stock Firefox ESR checkout into ducksteps: exported with `git format-patch` from the `esr153` branch, applied on top of upstream Mozilla commit `feec67e62a51` (see [`../Docs/Building.md`](../Docs/Building.md) for the full build workflow).
+These are the commits that turn a stock Firefox ESR checkout into ducksteps: exported with `git format-patch` from the `esr153` branch, applied on top of upstream Mozilla commit `861fdeb0d32f` (see [`../Docs/Building.md`](../Docs/Building.md) for the full build workflow).
 
 To use them: clone [mozilla-firefox/firefox](https://github.com/mozilla-firefox/firefox), check out the matching ESR branch/tag, then apply in order:
 

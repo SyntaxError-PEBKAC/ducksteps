@@ -1,4 +1,4 @@
-From a8578b57d60e1b5bbc21aa10a1e26a281d25a18b Mon Sep 17 00:00:00 2001
+From 7d9a5eb130cb17eeb8af1e024bdc6d7caea00098 Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Fri, 13 Feb 2026 12:50:10 -0700
 Subject: [PATCH 01/22] ducksteps: branding + patchset
@@ -142156,5 +142156,5 @@ index 3347f962193b..b64f18f7c9ee 100644
      }
  }
 -- 
-2.52.0.windows.1
+2.49.0.windows.1
 

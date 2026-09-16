@@ -1,4 +1,4 @@
-From 20bbeeec824049322864457416786cec642889ed Mon Sep 17 00:00:00 2001
+From 7372c76e2a586b75d4e27d8ac31613b931d561ad Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Sat, 15 Aug 2026 19:53:08 -0700
 Subject: [PATCH 17/22] ducksteps: delete tools/upx-after-package.ps1
@@ -53,5 +53,5 @@ index a543a1c5f943..000000000000
 -  & $upx -q -t $t.FullName
 -}
 -- 
-2.52.0.windows.1
+2.49.0.windows.1
 

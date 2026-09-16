@@ -4,6 +4,18 @@ All releases of ducksteps. Newest first.
 
 ---
 
+## [153.3.0] (16/September/2026)
+
+⛐ It's the "mostly smooth sailing" release!
+
+🔄 Updated to Firefox ESR 153.3.0.
+
+Pure upstream sync; no ducksteps-side changes this round.
+
+🛡️ Addressed 63 CVEs from [Mozilla Foundation Security Advisory 2026-93](https://www.mozilla.org/en-US/security/advisories/mfsa2026-93/) (September 15, 2026).
+
+---
+
 ## [153.2.0] (2/September/2026)
 
 ⛐ It's the "out of this world" release!

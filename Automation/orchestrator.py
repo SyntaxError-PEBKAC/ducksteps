@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import ctypes
+import difflib
 import hashlib
 import os
 import queue
@@ -48,6 +49,12 @@ CLOBBER_TIMEOUT_SECONDS = 600
 PACKAGE_TIMEOUT_SECONDS = 600
 SEVENZIP_TIMEOUT_SECONDS = 1800
 WINDOW_WAIT_SECONDS = 90
+# How long to keep trying to get the smoke window in front. 15s was too short: the window
+# only has to be occluded at its centre for that long, by anything transient (a toast, an
+# overlay repainting, the build console being interacted with), and a 10-hour build halts
+# one phase from the finish line. Waiting is free - nothing else is happening - and a
+# transient by definition passes.
+SMOKE_RAISE_TIMEOUT_SECONDS = 45
 
 PHASES = (
     ["PREFLIGHT", "STASH", "FETCH", "VERIFY_TAG", "CHECKOUT", "REBASE", "STASH_POP", "VERIFY_VER"]
@@ -76,12 +83,20 @@ class VTHaltError(OrchestratorError):
     already fully notified by the time this is raised, so run_pipeline must not re-triage it."""
 
 
+class Gate2HaltError(OrchestratorError):
+    """Gate 2 ended in a reject or a timeout. Like VTHaltError, already notified, and not a
+    fault - the build is intact and --resume picks it straight back up."""
+
+
 class Context:
-    def __init__(self, config, logger, state):
+    def __init__(self, config, logger, state, gate2_preapproved=False):
         self.config = config
         self.logger = logger
         self.state = state
         self.source_dir = Path(config["project"]["source_dir"])
+        # --publish-now: the draft has already been reviewed and edited, so PUBLISH should
+        # not send a Gate 2 notification and wait for a tap that has effectively happened.
+        self.gate2_preapproved = gate2_preapproved
 
     @property
     def build(self):
@@ -404,13 +419,17 @@ def _window_rect(hwnd):
     return rect.left, rect.top, rect.right, rect.bottom
 
 
-def _window_owns_its_centre(hwnd):
-    """True when the pixels at hwnd's centre actually belong to hwnd.
+def _centre_owner(hwnd):
+    """The top-level window that owns the pixels at hwnd's centre, or None.
 
     This is the check that matters: screenshot_region grabs whatever is painted at a
     screen rectangle, so the only thing worth asserting is that the paint there is ours.
     WindowFromPoint returns the deepest child under the point, so walk up to its
     top-level ancestor before comparing.
+
+    Returns the owner rather than a bool so a caller that loses the race can say who won
+    it. Compare against the hwnd you asked about: equal means the window is genuinely on
+    top and safe to capture.
     """
     user32 = ctypes.windll.user32
     user32.WindowFromPoint.restype = wintypes.HWND
@@ -421,13 +440,78 @@ def _window_owns_its_centre(hwnd):
     point = wintypes.POINT((left + right) // 2, (top + bottom) // 2)
     topmost = user32.WindowFromPoint(point)
     if not topmost:
-        return False
+        return None
     root = user32.GetAncestor(topmost, GA_ROOT)
-    return bool(root) and int(root) == int(hwnd)
+    return int(root) if root else None
 
 
-def _raise_window(hwnd, timeout_seconds=15, poll_interval=0.5):
-    """Put hwnd visually on top and confirm it, or return False.
+def _virtual_screen_rect():
+    """Bounding box of every monitor, as (left, top, right, bottom)."""
+    user32 = ctypes.windll.user32
+    SM_XVIRTUALSCREEN, SM_YVIRTUALSCREEN = 76, 77
+    SM_CXVIRTUALSCREEN, SM_CYVIRTUALSCREEN = 78, 79
+    left = user32.GetSystemMetrics(SM_XVIRTUALSCREEN)
+    top = user32.GetSystemMetrics(SM_YVIRTUALSCREEN)
+    return (left, top,
+            left + user32.GetSystemMetrics(SM_CXVIRTUALSCREEN),
+            top + user32.GetSystemMetrics(SM_CYVIRTUALSCREEN))
+
+
+def _centre_is_on_screen(hwnd):
+    """Whether hwnd's centre lands on an actual monitor.
+
+    Separate from _centre_owner because WindowFromPoint answers by window GEOMETRY, not by
+    what is painted on a display: a window parked at (-6000, -6000) still "owns" its own
+    centre and passes the ownership check, while CopyFromScreen at those coordinates
+    returns black. Confirmed directly, by moving a window off the virtual desktop and
+    watching the ownership check report success.
+
+    Without this the gate could not fail in exactly the case it exists for - Firefox
+    restores its window position from the profile, so a position left over from a
+    different monitor layout produces a black screenshot and a request to sign off on it.
+    """
+    left, top, right, bottom = _window_rect(hwnd)
+    centre_x, centre_y = (left + right) // 2, (top + bottom) // 2
+    v_left, v_top, v_right, v_bottom = _virtual_screen_rect()
+    return v_left <= centre_x < v_right and v_top <= centre_y < v_bottom
+
+
+def _describe_window(hwnd):
+    """class, title and owning process for a window handle, for log messages.
+
+    Exists because "something else owns the pixels at its centre" was true but useless: it
+    halted a 10-hour build one phase from the end without saying what the something else
+    was, leaving nothing to act on afterwards and no way to tell a transient toast from a
+    permanently-on-top widget.
+    """
+    if not hwnd:
+        return "<nothing>"
+    user32 = ctypes.windll.user32
+    cls = ctypes.create_unicode_buffer(256)
+    user32.GetClassNameW(hwnd, cls, 256)
+    length = user32.GetWindowTextLengthW(hwnd)
+    title = ctypes.create_unicode_buffer(length + 1)
+    user32.GetWindowTextW(hwnd, title, length + 1)
+    pid = _window_pid(hwnd)
+    name = ""
+    try:
+        result = subprocess.run(
+            ["tasklist", "/FI", f"PID eq {pid}", "/NH", "/FO", "CSV"],
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=10,
+        )
+        if result.returncode == 0 and '"' in result.stdout:
+            name = result.stdout.split('"')[1]
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return f"class={cls.value!r} title={(title.value or '')[:60]!r} pid={pid}{f' ({name})' if name else ''}"
+
+
+def _raise_window(hwnd, timeout_seconds=SMOKE_RAISE_TIMEOUT_SECONDS, poll_interval=0.5,
+                  logger=None):
+    """Put hwnd visually on top and confirm it. Returns (raised, problem).
+
+    `problem` is None on success, and otherwise a sentence naming what stopped it, ready to
+    drop into an error message or a log line.
 
     Deliberately does NOT rely on SetForegroundWindow succeeding. Windows refuses
     foreground activation to a process that does not already own the foreground window
@@ -446,6 +530,8 @@ def _raise_window(hwnd, timeout_seconds=15, poll_interval=0.5):
     SWP_NOMOVE, SWP_NOSIZE, SWP_SHOWWINDOW = 0x0002, 0x0001, 0x0040
 
     deadline = time.monotonic() + timeout_seconds
+    problem = "it never appeared on screen"
+    reported = set()
     while time.monotonic() < deadline:
         user32.ShowWindow(hwnd, SW_RESTORE)
         user32.SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0,
@@ -453,9 +539,25 @@ def _raise_window(hwnd, timeout_seconds=15, poll_interval=0.5):
         user32.BringWindowToTop(hwnd)
         user32.SetForegroundWindow(hwnd)  # best effort; may be refused, that is fine
         time.sleep(poll_interval)
-        if _window_owns_its_centre(hwnd):
-            return True
-    return False
+
+        # Order matters: off-screen first, because a window off the virtual desktop passes
+        # the ownership check below and would otherwise look like success.
+        if not _centre_is_on_screen(hwnd):
+            problem = (f"it is positioned off-screen at {_window_rect(hwnd)}; the virtual "
+                       f"desktop is {_virtual_screen_rect()}")
+        else:
+            owner = _centre_owner(hwnd)
+            if owner == int(hwnd):
+                return True, None
+            problem = f"the pixels at its centre belong to {_describe_window(owner)}"
+
+        # Logged once per distinct problem rather than every 0.5s: a transient costs one
+        # line and still passes, while a persistent one names every window that took a turn
+        # on top instead of only whichever happened to be last.
+        if logger and problem not in reported:
+            reported.add(problem)
+            logger.info("waiting for the smoke window: %s", problem)
+    return False, problem
 
 
 def _clear_topmost(hwnd):
@@ -508,14 +610,16 @@ def smoke(ctx, variant):
         proc.kill()
         raise OrchestratorError(f"no {variant} Firefox window appeared within {WINDOW_WAIT_SECONDS}s of 'mach run'")
 
-    if not _raise_window(hwnd):
+    raised, problem = _raise_window(hwnd, logger=ctx.logger)
+    if not raised:
         common.kill_pid(_window_pid(hwnd))
         proc.kill()
         raise OrchestratorError(
-            f"could not get the {variant} window in front within 15s (something else owns "
-            f"the pixels at its centre). Refusing to capture, because screenshot_region "
-            f"grabs whatever is painted at that rectangle and would show an unrelated "
-            f"window instead of the browser."
+            f"could not get the {variant} window in front within "
+            f"{SMOKE_RAISE_TIMEOUT_SECONDS}s: {problem}. Refusing to capture, because "
+            f"screenshot_region grabs whatever is painted at that rectangle and would show "
+            f"that instead of the browser. Clear whatever is in the way and re-run with "
+            f"--resume; nothing already built is lost."
         )
 
     time.sleep(2)  # let it finish painting once it is actually on top
@@ -527,6 +631,9 @@ def smoke(ctx, variant):
     common.kill_pid(_window_pid(hwnd))
     proc.kill()
 
+    # Before the send, not after: the subscription only opens once await_decision runs, and
+    # anything tapped in between would fall outside a window anchored later.
+    cursor = notify.Cursor()
     notify.send_smoke_test_ready(ctx.config, version, variant, screenshot_path)
 
     gate_wait_hours = ctx.config["timeouts"]["gate_wait_hours"]
@@ -534,7 +641,8 @@ def smoke(ctx, variant):
         f"smoke-ok-{version}-{variant}": "approved",
         f"smoke-reject-{version}-{variant}": "rejected",
     }
-    outcome = notify.await_decision(ctx.config, gate_wait_hours * 3600, valid_bodies, logger=ctx.logger)
+    outcome = notify.await_decision(ctx.config, gate_wait_hours * 3600, valid_bodies,
+                                    logger=ctx.logger, cursor=cursor)
     if outcome == "approved":
         return
     if outcome == "rejected":
@@ -818,6 +926,7 @@ def _vt_resolve_artifact(ctx, variant, kind, bucket):
 
         if result.status == "KNOWN_NOISE":
             engines = ", ".join(sorted(result.detections.keys()))
+            cursor = notify.Cursor()
             notify.send_vt_flagged(
                 ctx.config, version,
                 f"{variant}/{kind}: same engines as a previously shipped release ({engines}). "
@@ -827,7 +936,7 @@ def _vt_resolve_artifact(ctx, variant, kind, bucket):
             outcome = notify.await_decision(
                 ctx.config, gate_seconds,
                 {f"vt-approve-{version}": "approved", f"vt-halt-{version}": "halted"},
-                logger=ctx.logger,
+                logger=ctx.logger, cursor=cursor,
             )
             if outcome == "approved":
                 return
@@ -941,17 +1050,35 @@ def phase_draft(ctx):
         artifact_paths.append(variant_artifacts["setup_exe"])
         artifact_paths.append(variant_artifacts["standalone_7z"])
 
-    notes_path = _release_dir(ctx) / "release_notes.md"
+    release_dir = _release_dir(ctx)
+    notes_path = release_dir / "release_notes.md"
     # LF explicitly, not the platform default. This file IS the published release body -
     # gh reads it straight into the release via --notes-file - so its line endings should
     # not depend on which machine happened to run the build.
     notes_path.write_text(ctx.build["release_notes"], encoding="utf-8", newline="\n")
+    # Second copy, never overwritten. release_notes.md is rewritten at PUBLISH with the text
+    # as actually shipped, so without this the generated version is gone and there is no way
+    # to see what was edited. Keeping both is what makes _record_note_edits possible, and
+    # that diff is the only feedback loop render.py has.
+    (release_dir / "release_notes.generated.md").write_text(
+        ctx.build["release_notes"], encoding="utf-8", newline="\n")
 
     repo_slug = ctx.config["publish"]["repo_slug"]
     draft_url = publish.create_draft_release(
         repo_slug, version, ctx.build["release_title"], notes_path, artifact_paths, logger=ctx.logger,
     )
     ctx.build["draft_url"] = draft_url
+    # Recorded now, while the draft is definitely there, so PUBLISH can address it by id.
+    # Not fatal if it fails: fetch_release looks the id up itself when it is missing, and
+    # losing the whole draft over a hiccup in a bookkeeping call would be absurd.
+    try:
+        ctx.build["draft_release_id"] = publish.find_release_id(repo_slug, version, logger=ctx.logger)
+    except publish.PublishError as exc:
+        ctx.logger.warning("could not record the draft's release id (%s); PUBLISH will look it up", exc)
+
+    # Gate 2 is asked here but waited on in PUBLISH, and a --resume re-enters PUBLISH
+    # without re-asking, so the moment of the ask has to outlive this phase.
+    ctx.build["gate2_asked_at"] = datetime.now(timezone.utc).isoformat()
     notify.send_draft_ready(ctx.config, version, draft_url)
 
 
@@ -982,16 +1109,105 @@ def _record_vt_history(ctx):
     ctx.logger.info("recorded VT baseline for %s (%d variant(s))", version, len(entry))
 
 
+def _record_note_edits(ctx, generated, shipped):
+    """Save a diff of what was rewritten by hand, next to the artifacts.
+
+    render.py has no other feedback loop. Every release so far has been edited before it
+    went out and the edits have a clear shape (raw commit subjects rewritten as sentences,
+    the drafted summary cut down), but that was only visible by diffing a published release
+    against a local file after the fact. A few of these accumulated in releases/ is the
+    evidence for what the generator should be doing differently.
+    """
+    diff = difflib.unified_diff(
+        generated.splitlines(keepends=True), shipped.splitlines(keepends=True),
+        fromfile="release_notes.generated.md", tofile="release_notes.md", n=2,
+    )
+    text = "".join(diff)
+    if not text:
+        return
+    path = _release_dir(ctx) / "release_notes.edits.diff"
+    path.write_text(text, encoding="utf-8", newline="\n")
+    ctx.logger.info("recorded the hand edits made to %s's notes: %s", ctx.build["version"], path)
+
+
+def _adopt_edited_release_text(ctx):
+    """Re-read the draft from GitHub and make it authoritative for everything downstream.
+
+    This is the fix for the failure that ended the last two releases. The draft exists to be
+    edited - that is the entire reason DRAFT and PUBLISH are separate phases - but nothing
+    read the edits back, so approving at Gate 2 would have published Tim's rewritten notes
+    while committing ADVISORY's superseded text to Docs/Changelog.md and tagging it. The
+    only safe move left was to reject and redo the tail by hand, twice.
+
+    After this, the draft is the single source of truth for the release's prose and the
+    changelog entry is derived from it, so the two cannot disagree by construction.
+
+    The normalization pass is pushed BACK to the draft before publishing rather than applied
+    only to the changelog copy. Otherwise the sweeps would themselves recreate the drift
+    they exist to prevent: an em dash typed into the browser would be a semicolon in the
+    changelog and an em dash on the release page.
+    """
+    repo_slug = ctx.config["publish"]["repo_slug"]
+    version = ctx.build["version"]
+
+    release = publish.fetch_release(
+        repo_slug, version, ctx.build.get("draft_release_id"), logger=ctx.logger)
+    ctx.build["draft_release_id"] = release["id"]
+
+    fetched_body = publish.normalize_newlines(release["body"])
+    generated = ctx.build.get("release_notes", "")
+    if fetched_body.strip() != generated.strip():
+        ctx.logger.info("draft %s was edited on GitHub since DRAFT; the edited text is what ships", version)
+        _record_note_edits(ctx, generated, fetched_body)
+    else:
+        ctx.logger.info("draft %s is unchanged since DRAFT", version)
+
+    body = publish.sweep_release_body(fetched_body)
+    title = publish.sweep_release_title(release["name"])
+    if body != fetched_body or title != release["name"]:
+        ctx.logger.info("normalizing the draft before publishing (em dashes, smart quotes, spacing)")
+        publish.update_release_text(repo_slug, release["id"], title, body, logger=ctx.logger)
+
+    now = datetime.now(timezone.utc)
+    # The date the notes were rendered with, not today's. A Gate 2 round trip can now span a
+    # night, and re-dating the entry at publish time would make the changelog disagree with a
+    # document that was already reviewed under that date.
+    release_date = publish.changelog_entry_date(
+        ctx.build.get("changelog_entry"), f"{now.day}/{now.strftime('%B')}/{now.year}")
+
+    ctx.build["release_notes"] = body
+    ctx.build["release_title"] = title
+    ctx.build["changelog_entry"] = publish.sweep_changelog_entry(
+        publish.changelog_entry_from_release(body, title, version, release_date, logger=ctx.logger)
+    )
+    common.save_state(ctx.state)
+
+    # Local copy matches what shipped, so releases/<version>/ is a faithful record.
+    (_release_dir(ctx) / "release_notes.md").write_text(body, encoding="utf-8", newline="\n")
+
+
 def phase_publish(ctx):
     version = ctx.build["version"]
+    draft_url = ctx.build.get("draft_url", "")
     gate_hours = ctx.config["timeouts"]["gate_wait_hours"]
-    outcome = notify.await_decision(
-        ctx.config, gate_hours * 3600,
-        {f"publish-{version}": "approved", f"reject-draft-{version}": "rejected"},
-        logger=ctx.logger,
-    )
+    max_snoozes = ctx.config["timeouts"].get("gate2_max_extensions", 7)
+
+    if ctx.gate2_preapproved:
+        ctx.logger.warning("Gate 2 pre-approved on the command line (--publish-now), not waiting for a tap")
+        outcome = "approved"
+    else:
+        outcome = notify.await_gate2_decision(
+            ctx.config, version, draft_url, gate_hours * 3600, max_snoozes, logger=ctx.logger,
+            since=notify.anchor_from_iso(ctx.build.get("gate2_asked_at")),
+        )
+
     if outcome == "approved":
         repo_slug = ctx.config["publish"]["repo_slug"]
+
+        # Before anything is written anywhere: adopt whatever the draft says now. Every
+        # step below consumes ctx.build["release_notes"] / ["changelog_entry"], so this has
+        # to happen first or the docs repo gets the stale text.
+        _adopt_edited_release_text(ctx)
 
         # Everything that writes to the docs repo happens HERE, after approval, using the
         # release notes exactly as approved. Order matters: the tag has to be pushed before
@@ -1024,9 +1240,18 @@ def phase_publish(ctx):
         )
         ctx.logger.info("published %s", version)
         return
+
     if outcome == "rejected":
-        raise OrchestratorError(f"draft release for {version} rejected at Gate 2 - left as a draft, not published")
-    raise OrchestratorError(f"Gate 2 timed out for {version} after {gate_hours}h - draft left unpublished")
+        reason = "Rejected at Gate 2. The draft is untouched and still private."
+    else:
+        reason = (f"No response within {gate_hours}h "
+                  f"(plus up to {max_snoozes} extensions). The draft is still private.")
+    notify.send_gate2_halt(ctx.config, version, reason, draft_url)
+    # Gate2HaltError, not a bare OrchestratorError: this is a decision, not a fault, and
+    # run_pipeline's generic handler would otherwise run a claude -p triage over a traceback
+    # to explain that a button was pressed. PUBLISH stays out of completed_phases either
+    # way, so --resume re-enters here and re-asks.
+    raise Gate2HaltError(f"{version} not published: {reason}")
 
 
 PHASE_HANDLERS = {
@@ -1154,6 +1379,12 @@ def run_pipeline(ctx, start_index):
             ctx.logger.error("VIRUSTOTAL HALT at %s: %s", phase_name, exc)
             common.save_state(ctx.state)
             raise
+        except Gate2HaltError as exc:
+            # Same contract as VTHaltError: notified at the raise site, and a decision rather
+            # than a failure, so no triage and no FATAL.
+            ctx.logger.warning("GATE 2 HALT at %s: %s", phase_name, exc)
+            common.save_state(ctx.state)
+            raise
         except Exception as exc:
             log_path = getattr(exc, "log_path", None)
             tail_lines = getattr(exc, "tail_lines", None)
@@ -1199,7 +1430,14 @@ def _start_fresh(config, logger, state):
 
     if pending["status"] == "awaiting_approval":
         logger.info("waiting for Gate 1 approval on %s", pending["version"])
-        outcome = notify.await_gate1_decision(config, pending["version"], logger=logger)
+        # since=: the watcher asked this question, possibly hours ago, and the answer may
+        # already be sitting in ntfy's cache. Starting a fresh "from now on" subscription
+        # here is what used to make an approval tapped before this run invisible, so that
+        # walking to the PC after approving meant being asked all over again.
+        outcome = notify.await_gate1_decision(
+            config, pending["version"], logger=logger,
+            since=notify.anchor_from_iso(common.gate1_asked_at(pending)),
+        )
         if outcome == "approved":
             pending["status"] = "approved"
         elif outcome == "rejected":
@@ -1238,8 +1476,8 @@ def _resume(logger, state):
     return start_index
 
 
-def _run(config, logger, state, resume):
-    if resume:
+def _run(config, logger, state, resume, publish_now=False):
+    if resume or publish_now:
         start_index = _resume(logger, state)
     else:
         start_index = _start_fresh(config, logger, state)
@@ -1247,7 +1485,17 @@ def _run(config, logger, state, resume):
     if start_index is None:
         return 1
 
-    ctx = Context(config, logger, state)
+    if publish_now and PHASES[start_index] != "PUBLISH":
+        # Skipping a gate is only ever safe at the one phase the gate belongs to. Anywhere
+        # else this flag would silently mean "run the rest of the build with Gate 2 waived",
+        # including phases that have not produced a draft to approve yet.
+        logger.error(
+            "--publish-now only applies at PUBLISH, but %s is next for %s. Use --resume.",
+            PHASES[start_index], state["build"]["version"],
+        )
+        return 1
+
+    ctx = Context(config, logger, state, gate2_preapproved=publish_now)
     try:
         run_pipeline(ctx, start_index)
     except OrchestratorError:
@@ -1261,6 +1509,12 @@ def _run(config, logger, state, resume):
 def main() -> int:
     parser = argparse.ArgumentParser(description="ducksteps release orchestrator")
     parser.add_argument("--resume", action="store_true", help="resume an in-progress build from its last checkpoint")
+    parser.add_argument(
+        "--publish-now", action="store_true",
+        help="resume straight into PUBLISH with Gate 2 already answered: publishes the draft "
+             "as it currently stands on GitHub, edits included. For finishing a release you "
+             "have already reviewed in the browser without waiting for another ntfy tap.",
+    )
     args = parser.parse_args()
 
     config = common.load_config()
@@ -1275,7 +1529,7 @@ def main() -> int:
         return 1
 
     try:
-        return _run(config, logger, state, resume=args.resume)
+        return _run(config, logger, state, resume=args.resume, publish_now=args.publish_now)
     finally:
         lock.release()
 

@@ -1,4 +1,4 @@
-From c01f8ab8800bdeacb6a835ddb4a1c9a49e660ec9 Mon Sep 17 00:00:00 2001
+From fe670e097b219624e54fa19374f6f2c3b44aec5d Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Sat, 15 Aug 2026 19:17:36 -0700
 Subject: [PATCH 13/22] ducksteps: telemetry prompts name Mozilla, not the
@@ -67,5 +67,5 @@ index a944602b2d73..d2de4d50d246 100644
  helpus = Want to help? <label data-l10n-name="helpus-donateLink">Make a donation</label> or <label data-l10n-name="helpus-getInvolvedLink">get involved!</label>
  
 -- 
-2.52.0.windows.1
+2.49.0.windows.1
 

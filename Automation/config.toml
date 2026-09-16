@@ -29,6 +29,12 @@ pgo_phase_minutes   = 240
 variant_hours       = 8
 pipeline_hours      = 20
 gate_wait_hours     = 3     # how long ZEN5_SMOKE/LEGACY_SMOKE wait for a tap before halting (no snooze button on that gate)
+# Gate 2 only. Each "✏️ Still editing" tap buys another gate_wait_hours window, up to this
+# many times, so the default is 3h + up to 7 more = a day to rewrite the notes. Unlike the
+# smoke gates, this one asks you to edit a document rather than to look at a screenshot, and
+# the window opens whenever the build happens to finish. Running out is not expensive
+# (the draft survives, --resume re-asks), but it does cost a trip to the machine.
+gate2_max_extensions = 7
 
 [preflight]
 min_free_disk_gb = 50   # below this on either C: or D:, halt before touching anything

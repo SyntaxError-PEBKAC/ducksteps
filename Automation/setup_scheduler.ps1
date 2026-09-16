@@ -3,8 +3,10 @@
   Registers the two ducksteps automation Task Scheduler tasks.
 
 .DESCRIPTION
-  "ducksteps watcher"      - polls Mozilla for new releases, 2x daily (9am/5pm),
-                             runs whether logged on or not. Never builds anything.
+  "ducksteps watcher"      - polls Mozilla for new releases, 2x daily (9am/5pm), then
+                             stays subscribed to the ntfy approve topic until Gate 1 is
+                             answered, recording the answer in state.json. Runs whether
+                             logged on or not. Never builds anything.
   "ducksteps orchestrator" - runs the actual release pipeline. No automatic trigger:
                              start it manually (Task Scheduler UI "Run", or
                              `schtasks /run /tn "ducksteps orchestrator"`) once you've
@@ -82,11 +84,21 @@ $watcherTriggers = @(
     (New-ScheduledTaskTrigger -Daily -At 5:00PM)
 )
 
+# 13h, not 10 minutes. The watcher no longer just polls and exits: once it has sent a Gate 1
+# notification it stays subscribed to the approve topic until the question is answered, and
+# that window is 4 x 3h (the initial ask plus MAX_SNOOZES re-asks) in the worst case. At the
+# old 10-minute limit Windows killed the listener while the notification was still sitting
+# unread on the phone, which is the whole reason a tapped Approve reached nothing.
+#
+# MultipleInstances IgnoreNew is kept deliberately. A listening run does suppress the next
+# scheduled poll, and that is the right trade: the only thing that poll could discover is a
+# release even newer than the one currently waiting for an answer, while two concurrent
+# listeners would both record the same decision and both echo a confirmation to the phone.
 $watcherSettings = New-ScheduledTaskSettingsSet `
     -WakeToRun `
     -StartWhenAvailable `
     -MultipleInstances IgnoreNew `
-    -ExecutionTimeLimit (New-TimeSpan -Minutes 10)
+    -ExecutionTimeLimit (New-TimeSpan -Hours 13)
 
 # S4U: runs whether logged on or not, without storing a Windows password anywhere -
 # watcher.py only ever makes outbound HTTPS calls (product-details, GitHub, ntfy),
@@ -102,7 +114,7 @@ Register-ScheduledTask `
     -Trigger $watcherTriggers `
     -Settings $watcherSettings `
     -Principal $watcherPrincipal `
-    -Description "Polls Mozilla for new ducksteps-track ESR releases, 2x daily. Never builds." `
+    -Description "Polls Mozilla for new ducksteps-track ESR releases, 2x daily, and listens for the Gate 1 reply. Never builds." `
     -Force
 
 # --- ORCHESTRATOR task ---
