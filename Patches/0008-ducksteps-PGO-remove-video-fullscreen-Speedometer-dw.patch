@@ -1,4 +1,4 @@
-From 6fb5eb5df8ad53b56d1987f19678061b5fa1a79a Mon Sep 17 00:00:00 2001
+From fdd82ad7185d0d333cf9b5f80a68dba23909cbaf Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Wed, 6 May 2026 09:59:06 -0700
 Subject: [PATCH 08/22] ducksteps PGO: remove video fullscreen, Speedometer

@@ -1,4 +1,4 @@
-From d468c64f9025d116b13bed041bcbce05af480cc2 Mon Sep 17 00:00:00 2001
+From e7c11b5a6e4715f2175084022a4c50c93c697cd6 Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Fri, 14 Aug 2026 19:38:14 -0700
 Subject: [PATCH 11/22] ducksteps: fix About dialog wordmark overlap on ESR 153

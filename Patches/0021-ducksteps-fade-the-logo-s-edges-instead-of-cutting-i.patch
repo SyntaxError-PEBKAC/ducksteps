@@ -1,4 +1,4 @@
-From ff9c797ab74ca75fda96f41c7a0fc7e9fe51353a Mon Sep 17 00:00:00 2001
+From fec17da2de4f580083b6a9fea617f725c79e73b3 Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Mon, 31 Aug 2026 15:06:49 -0700
 Subject: [PATCH 21/22] ducksteps: fade the logo's edges instead of cutting it

@@ -1,4 +1,4 @@
-From 378d3b8a4dc6f5112b19a64b38492447b0b70aaf Mon Sep 17 00:00:00 2001
+From 8bfff050c069f10da6a4831ef460bb75f10d4878 Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Mon, 13 Apr 2026 15:39:23 -0700
 Subject: [PATCH 02/22] Custom PGO training: replace Mozilla default workload

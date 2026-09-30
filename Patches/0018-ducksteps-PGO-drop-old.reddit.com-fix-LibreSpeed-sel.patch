@@ -1,4 +1,4 @@
-From f4cb0b2383a7f10d053506f3c64b6aa1b64c446b Mon Sep 17 00:00:00 2001
+From ef62ed96eccb84bb911e5b762601d81e22db5bb7 Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Wed, 19 Aug 2026 13:28:11 -0700
 Subject: [PATCH 18/22] ducksteps PGO: drop old.reddit.com, fix LibreSpeed

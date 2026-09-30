@@ -1,4 +1,4 @@
-From fd0eafa5c61133d5250b898b7ade6952a8460670 Mon Sep 17 00:00:00 2001
+From 333f0689a223e2ff0a46706bed831e7e645329d4 Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Wed, 29 Apr 2026 17:36:43 -0700
 Subject: [PATCH 03/22] ducksteps: WebExtension PGO training + profileserver
