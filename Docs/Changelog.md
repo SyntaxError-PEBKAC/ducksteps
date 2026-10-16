@@ -4,6 +4,20 @@ All releases of ducksteps. Newest first.
 
 ---
 
+## [153.5.0] (16/October/2026)
+
+⛐ It's the "Tag, you're not it" release!
+
+🔄 Updated to Firefox ESR 153.5.0.
+
+Pure upstream sync; no ducksteps-side changes this round.
+
+🏷️ This one shipped a little late on purpose. Mozilla's release automation stamped the official 153.5.0 "release" tag on the wrong commit (a newer one that already had 153.6.0-bound code in it), so building from that tag would have given a mislabeled Frankenbuild. I held off until Mozilla fixed the tag, then built from the correct revision. Details in [Bug 2081230](https://bugzilla.mozilla.org/show_bug.cgi?id=2081230) (the automation bug that caused it) and [Bug 2081250](https://bugzilla.mozilla.org/show_bug.cgi?id=2081250) (the tag cleanup).
+
+🛡️ Addressed 61 CVEs from [Mozilla Foundation Security Advisory 2026-108](https://www.mozilla.org/en-US/security/advisories/mfsa2026-108/) (October 13, 2026). This one's a pure upstream sync: I didn't touch anything on the ducksteps side, so everything in here is Mozilla's work flowing through the build. That work is 61 security fixes in total: 29 high, 26 moderate, and 6 low. It's a big pile, but nothing in it jumps out as a headline-grabber, just a lot of ordinary hardening. The practical advice is the usual one: update, restart, and carry on with your day.
+
+---
+
 ## [153.4.0] (30/September/2026)
 
 ⛐ It's the "Doing grown-up stuff" release!

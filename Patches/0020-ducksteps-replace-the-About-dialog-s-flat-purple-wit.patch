@@ -1,4 +1,4 @@
-From a737714f7291db5693037ad5565153e9cc141b79 Mon Sep 17 00:00:00 2001
+From cca96c74555f94e85e9d621e3316b10d7f2a1099 Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Mon, 31 Aug 2026 15:06:27 -0700
 Subject: [PATCH 20/22] ducksteps: replace the About dialog's flat purple with
