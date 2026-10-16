@@ -28,7 +28,7 @@ Pure upstream sync; no ducksteps-side changes this round.
 
 🛡️ Addressed 62 CVEs from [Mozilla Foundation Security Advisory 2026-100](https://www.mozilla.org/en-US/security/advisories/mfsa2026-100/) (September 29, 2026). 
 
-Sorry for the brief delay. I was busy doing super important grown-up stuff… DEFINITELY NOT playing Minecraft Dungeons 2 and ignoring my notifications alerts all day.
+🎮 Sorry for the brief delay. I was busy doing super important grown-up stuff… DEFINITELY NOT playing Minecraft Dungeons 2 and ignoring my notifications alerts all day.
 
 ---
 
