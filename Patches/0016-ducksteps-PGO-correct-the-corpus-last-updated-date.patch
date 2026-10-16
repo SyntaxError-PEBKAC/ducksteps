@@ -26,5 +26,5 @@ index 482259b471d6..21bea20c0cee 100644
  const SITES = [
    // VIDEO PLAYBACK — codec + compositor + audio sync
 -- 
-2.49.0.windows.1
+2.52.0.windows.1
 

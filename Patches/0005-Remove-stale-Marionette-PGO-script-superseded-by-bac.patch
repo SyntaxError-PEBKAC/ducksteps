@@ -573,5 +573,5 @@ index f780a79ba2b9..000000000000
 -    except Exception:
 -        pass  # connection drops during quit — expected
 -- 
-2.49.0.windows.1
+2.52.0.windows.1
 

@@ -1166,7 +1166,7 @@ def _adopt_edited_release_text(ctx):
     title = publish.sweep_release_title(release["name"])
     if body != fetched_body or title != release["name"]:
         ctx.logger.info("normalizing the draft before publishing (em dashes, smart quotes, spacing)")
-        publish.update_release_text(repo_slug, release["id"], title, body, logger=ctx.logger)
+        publish.update_release_text(repo_slug, release["id"], title, body, version, logger=ctx.logger)
 
     now = datetime.now(timezone.utc)
     # The date the notes were rendered with, not today's. A Gate 2 round trip can now span a
@@ -1224,7 +1224,7 @@ def phase_publish(ctx):
         publish.commit_push_tag(repo_dir, version, logger=ctx.logger)
 
         publish.publish_release(
-            repo_slug, version,
+            repo_slug, version, release_id=ctx.build.get("draft_release_id"),
             discussion_category=ctx.config["publish"].get("discussion_category") or None,
             logger=ctx.logger,
         )
@@ -1281,6 +1281,10 @@ for _variant in VARIANTS:
 # --- timing / rolling median ---
 
 def _record_timing(ctx, phase_name, elapsed_seconds):
+    # SMOKE and PUBLISH are human gates: their duration is how long the maintainer took to
+    # tap, not how long the phase runs, so a median over them only produces false warnings.
+    if phase_name.endswith("_SMOKE") or phase_name == "PUBLISH":
+        return
     history = ctx.state.setdefault("phase_timing_history", {}).setdefault(phase_name, [])
     if history:
         sorted_history = sorted(history)

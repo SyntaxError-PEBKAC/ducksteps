@@ -349,22 +349,37 @@ def create_draft_release(repo_slug, version, title, notes_path, artifact_paths, 
     return draft_url
 
 
-def publish_release(repo_slug, version, discussion_category=None, logger=None) -> None:
+def publish_release(repo_slug, version, release_id=None, discussion_category=None, logger=None) -> None:
     """Flip the draft public, and start its release discussion in the same call.
 
-    --discussion-category only takes effect on the draft -> published transition, which is
+    By id, with tag_name set explicitly, never by tag. 153.5.0 failed here with "release not
+    found": by publish time the draft's tag_name had become a fresh untagged-<hash>, so the
+    old `gh release edit <version>` lookup had nothing to find - after the docs repo was
+    already committed, pushed and tagged. Setting tag_name in the same PATCH re-attaches the
+    draft to the tag phase_publish just pushed, whatever happened to the field in between.
+
+    discussion_category_name only takes effect on the draft -> published transition, which is
     exactly this call, so the discussion has to be requested here rather than at
     create_draft_release time (a draft cannot own a discussion yet).
     """
-    cmd = ["gh", "release", "edit", version, "--repo", repo_slug, "--draft=false"]
-    if discussion_category:
-        cmd += ["--discussion-category", discussion_category]
+    if release_id is None:
+        release_id = find_release_id(repo_slug, version, logger=logger)
+    if release_id is None:
+        raise PublishError(f"cannot find the draft for {version} in {repo_slug} to publish")
 
-    result = subprocess.run(
-        cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=60,
-    )
-    if result.returncode != 0:
-        raise PublishError(f"gh release edit --draft=false failed: {result.stderr.strip()}")
+    args = ["api", "-X", "PATCH", f"repos/{repo_slug}/releases/{release_id}",
+            "-F", "draft=false", "-f", f"tag_name={version}"]
+    if discussion_category:
+        args += ["-f", f"discussion_category_name={discussion_category}"]
+    _run_gh(args, logger=logger)
+
+    # gh exiting 0 is not proof: check that the release is public and on the right tag
+    # before anything downstream (notification, _finish_build) treats it as shipped.
+    data = json.loads(_run_gh(["api", f"repos/{repo_slug}/releases/{release_id}"], logger=logger))
+    if data.get("draft") or data.get("tag_name") != version:
+        raise PublishError(
+            f"release {release_id} is draft={data.get('draft')} tag_name={data.get('tag_name')!r} "
+            f"after publishing, expected a public release tagged {version}")
     if logger:
         logger.info("published release %s", version)
 
@@ -483,11 +498,17 @@ def fetch_release(repo_slug, version, release_id=None, logger=None) -> dict:
     }
 
 
-def update_release_text(repo_slug, release_id, title, body, logger=None) -> None:
-    """Write title/body back to the release, by id so it works on a draft."""
+def update_release_text(repo_slug, release_id, title, body, version, logger=None) -> None:
+    """Write title/body back to the release, by id so it works on a draft.
+
+    tag_name is resent with the text. In 153.5.0 this PATCH (name and body only) was the
+    last write before the draft turned up with tag_name untagged-<hash>, and 153.4.0 -
+    browser-edited but needing no normalization, so never PATCHed - published fine. Resending
+    the field keeps the draft attached to its version whatever GitHub does with an omitted one.
+    """
     _run_gh(
         ["api", "-X", "PATCH", f"repos/{repo_slug}/releases/{release_id}",
-         "-f", f"name={title}", "-f", f"body={body}"],
+         "-f", f"name={title}", "-f", f"body={body}", "-f", f"tag_name={version}"],
         logger=logger,
     )
     if logger:
