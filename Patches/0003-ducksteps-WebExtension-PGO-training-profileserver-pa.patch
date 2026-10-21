@@ -1,4 +1,4 @@
-From fd64573341bca7abd8bff930d248632f4637e6d2 Mon Sep 17 00:00:00 2001
+From 13217d787899f99b7d6b7a939bd492b8be300656 Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Wed, 29 Apr 2026 17:36:43 -0700
 Subject: [PATCH 03/22] ducksteps: WebExtension PGO training + profileserver
@@ -192,5 +192,5 @@ index 63d4c9c7923b..f77f9b7e142d 100755
 +                sys.exit(1)
 \ No newline at end of file
 -- 
-2.52.0.windows.1
+2.49.0.windows.1
 

@@ -1,4 +1,4 @@
-From 32b1e4c86dd999038529d8e5adddacb30f3f4f60 Mon Sep 17 00:00:00 2001
+From 3a4d8da6965afd741555833ce56fd0b1b002d242 Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Wed, 29 Apr 2026 23:42:50 -0700
 Subject: [PATCH 05/22] Remove stale Marionette PGO script, superseded by
@@ -573,5 +573,5 @@ index f780a79ba2b9..000000000000
 -    except Exception:
 -        pass  # connection drops during quit — expected
 -- 
-2.52.0.windows.1
+2.49.0.windows.1
 

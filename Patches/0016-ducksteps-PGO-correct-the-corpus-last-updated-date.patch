@@ -1,4 +1,4 @@
-From ff6c72fd8c5dc75e6fda14feccbf704ef346d4ec Mon Sep 17 00:00:00 2001
+From bb7d72d34de606fd3c1090880aa7939717684a46 Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Sat, 15 Aug 2026 19:52:55 -0700
 Subject: [PATCH 16/22] ducksteps PGO: correct the corpus last-updated date
@@ -26,5 +26,5 @@ index 482259b471d6..21bea20c0cee 100644
  const SITES = [
    // VIDEO PLAYBACK — codec + compositor + audio sync
 -- 
-2.52.0.windows.1
+2.49.0.windows.1
 

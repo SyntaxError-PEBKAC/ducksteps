@@ -1,4 +1,4 @@
-From 5098f524d65e0f9dcdba4d3a722837461eee15ec Mon Sep 17 00:00:00 2001
+From caff8af21fd9d942706fbd5117b9cb35647de40d Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Sat, 15 Aug 2026 19:48:54 -0700
 Subject: [PATCH 15/22] ducksteps: correct the More from Mozilla settings page
@@ -75,5 +75,5 @@ index ac655663e02a..7ae40246208e 100644
  
  more-from-moz-mozilla-monitor-box-link =
 -- 
-2.52.0.windows.1
+2.49.0.windows.1
 

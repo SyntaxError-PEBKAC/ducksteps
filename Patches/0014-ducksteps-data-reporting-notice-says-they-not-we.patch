@@ -1,4 +1,4 @@
-From bd55fc54681382c64e40a2ce3aba8c14cbbb6ab3 Mon Sep 17 00:00:00 2001
+From c3844ed0f6580bc2634d9e34b6ead959a95b6b75 Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Sat, 15 Aug 2026 19:46:57 -0700
 Subject: [PATCH 14/22] ducksteps: data reporting notice says "they", not "we"
@@ -31,5 +31,5 @@ index 759a6d2638c3..6d7610b8c36f 100644
      .label = Choose What I Share
      .accesskey = C
 -- 
-2.52.0.windows.1
+2.49.0.windows.1
 

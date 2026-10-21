@@ -1,4 +1,4 @@
-From 18787b026c45b0a0668a54d4147ae8209560c36a Mon Sep 17 00:00:00 2001
+From 330cf496d65747ed618d4eb3b7a3a3cd8980bb38 Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Wed, 12 Aug 2026 22:32:40 -0700
 Subject: [PATCH 09/22] ducksteps: credit Mozilla and SyntaxError-PEBKAC in
@@ -54,5 +54,5 @@ index d0357aa57a83..a944602b2d73 100644
  helpus = Want to help? <label data-l10n-name="helpus-donateLink">Make a donation</label> or <label data-l10n-name="helpus-getInvolvedLink">get involved!</label>
  
 -- 
-2.52.0.windows.1
+2.49.0.windows.1
 

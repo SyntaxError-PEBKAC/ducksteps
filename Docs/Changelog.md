@@ -4,6 +4,16 @@ All releases of ducksteps. Newest first.
 
 ---
 
+## [153.5.1] (21/October/2026)
+
+⛐ It's the "61 patches in a minor version" release!
+
+🔄 Updated to Firefox ESR 153.5.1.
+
+🛡️ Addressed 61 CVEs from [Mozilla Foundation Security Advisory 2026-108](https://www.mozilla.org/en-US/security/advisories/mfsa2026-108/) (October 13, 2026). The security tally is 29 high, 26 moderate, and 6 low. It's mostly the usual steady drip of memory-safety fixes and assorted sandbox and web-platform cleanups.
+
+---
+
 ## [153.5.0] (16/October/2026)
 
 ⛐ It's the "Tag, you're not it" release!

@@ -1,4 +1,4 @@
-From 2aa32c19a9ce918defd7a2d42b7b67f9ab3c6466 Mon Sep 17 00:00:00 2001
+From 60c5675b5a45c201b96f8262959fabeebd68d2ce Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Fri, 14 Aug 2026 19:54:25 -0700
 Subject: [PATCH 12/22] ducksteps: resync stub installer CSS with ESR 153
@@ -233,5 +233,5 @@ index a8dbad0e110e..07f8e31d09d2 100644
 +  font-size: 15px;
  }
 -- 
-2.52.0.windows.1
+2.49.0.windows.1
 

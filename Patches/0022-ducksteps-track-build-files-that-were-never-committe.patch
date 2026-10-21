@@ -1,4 +1,4 @@
-From a6deb3f49697a89dfa0c298f788598a979b022b2 Mon Sep 17 00:00:00 2001
+From 04d96bcb032f8456df0cb3bcbc19a254b781062f Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Mon, 31 Aug 2026 15:25:51 -0700
 Subject: [PATCH 22/22] ducksteps: track build files that were never committed
@@ -2154,5 +2154,5 @@ index 000000000000..c21c34dddc46
 +echo "Done: $INSTALLER"
 \ No newline at end of file
 -- 
-2.52.0.windows.1
+2.49.0.windows.1
 
