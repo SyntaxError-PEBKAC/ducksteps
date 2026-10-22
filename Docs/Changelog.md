@@ -6,11 +6,13 @@ All releases of ducksteps. Newest first.
 
 ## [153.5.1] (21/October/2026)
 
-⛐ It's the "61 patches in a minor version" release!
+⛐ It's the "One CVE and a blocklist" release!
 
 🔄 Updated to Firefox ESR 153.5.1.
 
-🛡️ Addressed 61 CVEs from [Mozilla Foundation Security Advisory 2026-108](https://www.mozilla.org/en-US/security/advisories/mfsa2026-108/) (October 13, 2026). The security tally is 29 high, 26 moderate, and 6 low. It's mostly the usual steady drip of memory-safety fixes and assorted sandbox and web-platform cleanups.
+🛡️ Addressed 1 CVE from [Mozilla Foundation Security Advisory 2026-112](https://www.mozilla.org/en-US/security/advisories/mfsa2026-112/) (October 20, 2026). Mozilla revoked compromised intermediate eMudhra certificates through OneCRL on October 17, and 153.5.1 ships the updated OneCRL blocklist inside the build, so those certificates stay blocked even if RemoteSettings is disabled by policy or unreachable.
+
+🩹 Correction: the first version of these notes was wrong, and that's on me. My release automation matched 153.5.1 to the 153.5.0 advisory (MFSA 2026-108), so the notes claimed 61 CVEs and a 29 high, 26 moderate, 6 low split that belong to 153.5.0, not this release. Sorry about that. The notes above are now correct, and I'll patch the automation so it can't happen again on future minor releases.
 
 ---
 
