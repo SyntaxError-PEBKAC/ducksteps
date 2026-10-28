@@ -986,6 +986,7 @@ def phase_advisory(ctx):
         version,
         ctx.config.get("advisory", {}).get("non_windows_markers", ()),
         logger=ctx.logger,
+        allow_no_advisory=version in ctx.config.get("advisory", {}).get("no_security_versions", ()),
     )
     changes = render.get_ducksteps_changes(ctx.source_dir, repo_dir, tag, version, logger=ctx.logger)
 

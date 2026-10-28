@@ -75,6 +75,12 @@ non_windows_markers = [
     "does not affect Firefox for Windows",
 ]
 
+# Versions that genuinely have no MFSA (e.g. "153.7.1"). Anything not listed halts the
+# ADVISORY phase when no advisory is found, because "not published yet" looks identical
+# and a release shipped on that guess has no security section. Add the version only after
+# confirming on mozilla.org that no advisory exists, then --resume.
+no_security_versions = []
+
 [msys]
 # MozillaBuild's bash, given absolutely because a bare "bash" does not reach it.
 # CreateProcess searches System32 before PATH, and C:\Windows\System32\bash.exe is the

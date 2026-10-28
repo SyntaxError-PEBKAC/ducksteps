@@ -1,4 +1,4 @@
-From 81ddd9df4a569cd5a8dd56f7a0e41d942ec59657 Mon Sep 17 00:00:00 2001
+From f379dbcf34228116afff7b9c336fcfdea2504dcc Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Mon, 31 Aug 2026 15:06:07 -0700
 Subject: [PATCH 19/22] ducksteps: enlarge and reposition the About dialog

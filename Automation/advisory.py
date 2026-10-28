@@ -39,11 +39,16 @@ def _fixed_in_candidates(version) -> list:
     "Firefox ESR x.y.z" form. Only the two-component case gets the plain-Firefox
     candidates - offering them for a point release would let an unrelated rapid-release
     advisory match.
+
+    The x.y.0 release of a line is often labelled "Firefox ESR x.y" (MFSA 2026-108 says
+    "Firefox ESR 153.5"), so that form is a candidate for x.y.0 only. Offering it for
+    x.y.1 and later made 153.5.1 match the 153.5.0 advisory and ship its CVE list.
     """
     parts = version.split(".")
     candidates = [f"Firefox ESR {version}"]
     if len(parts) == 3:
-        candidates.append(f"Firefox ESR {parts[0]}.{parts[1]}")
+        if parts[2] == "0":
+            candidates.append(f"Firefox ESR {parts[0]}.{parts[1]}")
     else:
         candidates.append(f"Firefox {version}")
         candidates.append(f"Firefox {parts[0]}")
@@ -163,8 +168,11 @@ def _try_scrape_search(version, logger=None):
         return None, exc
 
     candidates = _fixed_in_candidates(version)
+    # A bare substring test would let "Firefox ESR 153.5" match a 153.5.1 line and
+    # "Firefox ESR 153.5.1" match 153.5.10, so a candidate must stand alone as a version.
+    patterns = [re.compile(rf"(?<![\w.]){re.escape(c)}(?!\w|\.\d)") for c in candidates]
     for line in r.text.splitlines():
-        if any(c in line for c in candidates):
+        if any(p.search(line) for p in patterns):
             match = re.search(r"mfsa(\d{4}-\d+)", line, re.IGNORECASE)
             if match:
                 mfsa_number = match.group(1)
@@ -177,10 +185,29 @@ def _try_scrape_search(version, logger=None):
     return None, None
 
 
-def resolve_advisory(version, non_windows_markers=(), logger=None) -> Advisory:
+def _nothing_found(version, allow_no_advisory, detail, logger):
+    """Both sources came back without an advisory for `version`. That is indistinguishable
+    from Mozilla not having published it yet (the YAML repo can lag the release), and a
+    release shipped on that guess carries no security section at all. So it halts unless
+    the version was explicitly declared to have no security content."""
+    if allow_no_advisory:
+        if logger:
+            logger.warning("no advisory found for %s (%s); proceeding because the version is "
+                           "listed in [advisory] no_security_versions", version, detail)
+        return Advisory.empty()
+    raise AdvisoryError(
+        f"no advisory found for {version} ({detail}). Mozilla may not have published it yet: "
+        f"rerun with --resume once it appears. If this release genuinely has no security "
+        f"content, add \"{version}\" to [advisory] no_security_versions in config.toml."
+    )
+
+
+def resolve_advisory(version, non_windows_markers=(), logger=None, allow_no_advisory=False) -> Advisory:
     """Resolves the MFSA/CVE data for `version` (e.g. "140.14.0"). Returns Advisory.empty()
-    for the legitimate "no security content this release" case - only raises AdvisoryError
-    when neither source could give a definitive answer, or when they disagree.
+    only when allow_no_advisory is set (the version is listed in [advisory]
+    no_security_versions) and no advisory exists. It raises AdvisoryError when neither
+    source could give a definitive answer, when they disagree, or when nothing is found
+    for a version not declared to have no security content.
 
     non_windows_markers drops CVEs upstream scopes to platforms ducksteps doesn't build
     for (see [advisory] in config.toml). It only ever filters the CVE list; it never
@@ -196,7 +223,7 @@ def resolve_advisory(version, non_windows_markers=(), logger=None) -> Advisory:
 
     if yaml_error is None and scrape_error is None:
         if scrape_hit is None:
-            return Advisory.empty()
+            return _nothing_found(version, allow_no_advisory, "both sources searched", logger)
         raise AdvisoryError(
             f"mozilla.org shows {scrape_hit['mfsa_number']} for {version} but the structured "
             f"YAML repo doesn't - sources disagree, halting rather than guessing CVE details."
@@ -214,10 +241,8 @@ def resolve_advisory(version, non_windows_markers=(), logger=None) -> Advisory:
             f"neither advisory source could be reached for {version}: YAML={yaml_error}, scrape={scrape_error}"
         )
 
-    if logger:
-        logger.warning(
-            "one advisory source errored (yaml=%s, scrape=%s) but the other found nothing for "
-            "%s and was fully reachable; proceeding as no security content",
-            yaml_error, scrape_error, version,
-        )
-    return Advisory.empty()
+    return _nothing_found(
+        version, allow_no_advisory,
+        f"one source errored (yaml={yaml_error}, scrape={scrape_error}), the other found nothing",
+        logger,
+    )

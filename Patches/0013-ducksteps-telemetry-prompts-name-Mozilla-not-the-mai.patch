@@ -1,4 +1,4 @@
-From 35cb5a7b0ca7dcb225fe005635c00af1e2bf756a Mon Sep 17 00:00:00 2001
+From 575e65a5171c75a6a9bca2b360a8e9f458582e46 Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Sat, 15 Aug 2026 19:17:36 -0700
 Subject: [PATCH 13/22] ducksteps: telemetry prompts name Mozilla, not the

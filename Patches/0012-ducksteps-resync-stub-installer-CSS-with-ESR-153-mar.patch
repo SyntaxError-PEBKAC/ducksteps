@@ -1,4 +1,4 @@
-From 60c5675b5a45c201b96f8262959fabeebd68d2ce Mon Sep 17 00:00:00 2001
+From ba439de24052f71befd6c7a27985ddc5bfc2400c Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Fri, 14 Aug 2026 19:54:25 -0700
 Subject: [PATCH 12/22] ducksteps: resync stub installer CSS with ESR 153

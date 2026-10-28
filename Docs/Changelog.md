@@ -4,6 +4,16 @@ All releases of ducksteps. Newest first.
 
 ---
 
+## [153.6.0] (28/October/2026)
+
+⛐ It's the "145 CVE's?! Really?!" release!
+
+🔄 Updated to Firefox ESR 153.6.0.
+
+🛡️ Addressed 145 CVEs from [Mozilla Foundation Security Advisory 2026-120](https://www.mozilla.org/en-US/security/advisories/mfsa2026-120/) (October 27, 2026). This one's a pure upstream sync, so I didn't touch a single line of ducksteps-side code, and all I did was hit the button. Mozilla's side was busy, though: 145 CVEs fixed in total, made up of 95 high, 44 moderate, and 6 low. That's a big pile, and it's mostly high-severity, so don't sit on this update. Nothing in the batch jumps out as a single headline bug. It reads more like a very thorough spring cleaning than one scary fire. Update, restart, stiff upper lip, keep calm, carry on…
+
+---
+
 ## [153.5.1] (21/October/2026)
 
 ⛐ It's the "One CVE and a blocklist" release!

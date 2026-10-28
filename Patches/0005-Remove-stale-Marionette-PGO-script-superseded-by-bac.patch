@@ -1,4 +1,4 @@
-From 3a4d8da6965afd741555833ce56fd0b1b002d242 Mon Sep 17 00:00:00 2001
+From 552de09a5c9405062f5c4be06787452efeabee72 Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Wed, 29 Apr 2026 23:42:50 -0700
 Subject: [PATCH 05/22] Remove stale Marionette PGO script, superseded by
