@@ -4,6 +4,16 @@ All releases of ducksteps. Newest first.
 
 ---
 
+## [153.7.0] (11/November/2026)
+
+⛐ It's the "Ate too much Halloween candy" release!
+
+🔄 Updated to Firefox ESR 153.7.0. No ducksteps-side changes this round.
+
+🛡️ Addressed 81 CVEs from [Mozilla Foundation Security Advisory 2026-127](https://www.mozilla.org/en-US/security/advisories/mfsa2026-127/) (November 10, 2026). This round patches 81 CVEs: 51 high, 21 moderate and 9 low.
+
+---
+
 ## [153.6.0] (28/October/2026)
 
 ⛐ It's the "145 CVE's?! Really?!" release!

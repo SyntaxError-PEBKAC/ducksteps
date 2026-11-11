@@ -1,4 +1,4 @@
-From 0b2737f01f54a43743a7cdd222c3e0e4095bb963 Mon Sep 17 00:00:00 2001
+From 5417cec1e6039207526a7fd71b44e390f8841436 Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Thu, 13 Aug 2026 00:07:16 -0700
 Subject: [PATCH 10/22] ducksteps: fix installer wizard bitmap artifacts
