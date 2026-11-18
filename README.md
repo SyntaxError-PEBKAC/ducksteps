@@ -68,6 +68,13 @@ Grab the correct installer or standalone ZIP from the Releases page.
 SHA512 hashes and VirusTotal results are included with every release.
 
 ---
+🔔 Update notifications
+
+ducksteps does not update itself. Once a day it asks GitHub for the version number of the newest published release. If that version is newer than yours, a bar appears at the top of the window and the About dialog shows a Download link to that release's page. You then download and run the installer yourself.
+
+The check is one anonymous request to `api.github.com`, with no cookies and no personal data sent. Nothing is downloaded or installed automatically. To turn it off, set `ducksteps.releasecheck.enabled` to `false` in `about:config`.
+
+---
 ⚖️ Legal
 
 ducksteps is an unofficial build. "Firefox" and the Firefox logo are trademarks of Mozilla. ducksteps is not affiliated with or endorsed by Mozilla. 
