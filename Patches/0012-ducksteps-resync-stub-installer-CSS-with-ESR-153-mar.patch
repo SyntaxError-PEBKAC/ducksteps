@@ -1,7 +1,7 @@
-From 7b9ddd78a3943a9069e271c7779f978c1eb2075e Mon Sep 17 00:00:00 2001
+From ed11205f5175762a3c3d302c3ddab94a72e130c7 Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Fri, 14 Aug 2026 19:54:25 -0700
-Subject: [PATCH 12/22] ducksteps: resync stub installer CSS with ESR 153
+Subject: [PATCH 12/23] ducksteps: resync stub installer CSS with ESR 153
  markup
 
 Same staleness as the About dialog fix. Both stub installer stylesheets

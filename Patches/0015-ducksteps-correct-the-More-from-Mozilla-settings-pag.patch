@@ -1,7 +1,7 @@
-From 6e34bd4d1b1d647133e4a5d0f7360a1b567dfa04 Mon Sep 17 00:00:00 2001
+From 0733810f4c7223f77ef2c5af578725f5c9e6e06b Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Sat, 15 Aug 2026 19:48:54 -0700
-Subject: [PATCH 15/22] ducksteps: correct the More from Mozilla settings page
+Subject: [PATCH 15/23] ducksteps: correct the More from Mozilla settings page
 
 The page advertises OTHER products, so it should name Mozilla throughout.
 Fixing -vendor-short-name already corrected the header, the left-hand nav

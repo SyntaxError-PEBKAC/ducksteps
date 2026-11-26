@@ -1,0 +1,388 @@
+From 20087a43bc01a73efb00d9579f3dc68a790dbb7e Mon Sep 17 00:00:00 2001
+From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
+Date: Tue, 17 Nov 2026 19:13:25 -0700
+Subject: [PATCH 23/23] ducksteps: notify when a newer release is published
+
+The updater is disabled in ducksteps builds, so users had no way to
+learn that a new release exists. Add DuckstepsReleaseCheck, which once
+a day reads tag_name from the GitHub "latest release" API response and
+compares it with the running version. Drafts and pre-releases are
+ignored, and the tag must look like a plain version number.
+
+When a newer version exists, a notification bar offers Download (opens
+that release's page on the ducksteps repository) and Not now (hides the
+bar until the next version). The About dialog shows the same status.
+The link is built from the validated version, never taken from the
+response, so it cannot point outside the ducksteps repository.
+
+Nothing is downloaded or installed. Disable with
+ducksteps.releasecheck.enabled.
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ browser/base/content/aboutDialog.css          |   4 +
+ browser/base/content/aboutDialog.js           |  24 ++
+ browser/base/content/aboutDialog.xhtml        |   4 +
+ .../ducksteps/pref/firefox-branding.js        |   7 +
+ browser/components/BrowserComponents.manifest |   1 +
+ browser/modules/DuckstepsReleaseCheck.sys.mjs | 233 ++++++++++++++++++
+ browser/modules/moz.build                     |   1 +
+ 7 files changed, 274 insertions(+)
+ create mode 100644 browser/modules/DuckstepsReleaseCheck.sys.mjs
+
+diff --git a/browser/base/content/aboutDialog.css b/browser/base/content/aboutDialog.css
+index 017125bc2510..f1eab2e320a6 100644
+--- a/browser/base/content/aboutDialog.css
++++ b/browser/base/content/aboutDialog.css
+@@ -81,6 +81,10 @@
+   }
+ }
+ 
++#duckstepsReleaseText {
++  margin-inline-start: 0;
++}
++
+ #distribution,
+ #distributionId {
+   display: none;
+diff --git a/browser/base/content/aboutDialog.js b/browser/base/content/aboutDialog.js
+index f6e1391baf12..98a4e695872d 100644
+--- a/browser/base/content/aboutDialog.js
++++ b/browser/base/content/aboutDialog.js
+@@ -18,6 +18,26 @@ if (AppConstants.MOZ_UPDATER) {
+   );
+ }
+ 
++async function showDuckstepsReleaseStatus() {
++  const { DuckstepsReleaseCheck } = ChromeUtils.importESModule(
++    "resource:///modules/DuckstepsReleaseCheck.sys.mjs"
++  );
++  let status = await DuckstepsReleaseCheck.getStatus();
++  let text = document.getElementById("duckstepsReleaseText");
++  let link = document.getElementById("duckstepsReleaseLink");
++  if (status.state == "available") {
++    text.value = `ducksteps ${status.version} is available.`;
++    link.value = "Download";
++    link.href = status.url;
++    link.hidden = false;
++  } else if (status.state == "current") {
++    text.value = "ducksteps is up to date.";
++  } else {
++    return;
++  }
++  document.getElementById("duckstepsReleaseStatus").hidden = false;
++}
++
+ function init() {
+   let defaults = Services.prefs.getDefaultBranch(null);
+   let distroId = defaults.getCharPref("distribution.id", "");
+@@ -115,6 +135,10 @@ function init() {
+     }
+   }
+ 
++  if (!AppConstants.MOZ_UPDATER) {
++    showDuckstepsReleaseStatus();
++  }
++
+   if (AppConstants.IS_ESR) {
+     document.getElementById("release").hidden = false;
+   }
+diff --git a/browser/base/content/aboutDialog.xhtml b/browser/base/content/aboutDialog.xhtml
+index b261f12a42ee..43fcc008a91c 100644
+--- a/browser/base/content/aboutDialog.xhtml
++++ b/browser/base/content/aboutDialog.xhtml
+@@ -51,6 +51,10 @@
+           <label id="version"/>
+           <label id="releasenotes" is="text-link" hidden="true" data-l10n-id="releaseNotes-link"/>
+         </hbox>
++        <hbox id="duckstepsReleaseStatus" align="baseline" hidden="true">
++          <label id="duckstepsReleaseText"/>
++          <label id="duckstepsReleaseLink" is="text-link" hidden="true"/>
++        </hbox>
+ #endif
+ 
+         <label id="distribution" class="text-blurb"/>
+diff --git a/browser/branding/ducksteps/pref/firefox-branding.js b/browser/branding/ducksteps/pref/firefox-branding.js
+index 1be7a9632373..ec1168d1d006 100644
+--- a/browser/branding/ducksteps/pref/firefox-branding.js
++++ b/browser/branding/ducksteps/pref/firefox-branding.js
+@@ -43,6 +43,13 @@ pref("app.update.checkInstallTime.days", 63);
+ // button. default=4 days
+ pref("app.update.badgeWaitTime", 345600);
+ 
++// Notify the user when a newer ducksteps release is published on GitHub.
++pref("ducksteps.releasecheck.enabled", true);
++pref("ducksteps.releasecheck.url", "https://api.github.com/repos/SyntaxError-PEBKAC/ducksteps/releases/latest");
++pref("ducksteps.releasecheck.latestVersion", "");
++pref("ducksteps.releasecheck.lastCheck", "0");
++pref("ducksteps.releasecheck.dismissedVersion", "");
++
+ // Number of usages of the web console.
+ // If this is less than 5, then pasting code into the web console is disabled
+ pref("devtools.selfxss.count", 0);
+diff --git a/browser/components/BrowserComponents.manifest b/browser/components/BrowserComponents.manifest
+index 8edb9fe21047..3f4735f76911 100644
+--- a/browser/components/BrowserComponents.manifest
++++ b/browser/components/BrowserComponents.manifest
+@@ -126,6 +126,7 @@ category browser-idle-startup moz-src:///browser/components/places/PlacesUIUtils
+ category browser-idle-startup resource:///modules/BuiltInThemes.sys.mjs BuiltInThemes.ensureBuiltInThemes
+ category browser-idle-startup resource://gre/modules/RFPHelper.sys.mjs RFPHelper.init
+ category browser-idle-startup resource://gre/modules/Blocklist.sys.mjs Blocklist.loadBlocklistAsync
++category browser-idle-startup resource:///modules/DuckstepsReleaseCheck.sys.mjs DuckstepsReleaseCheck.init
+ category browser-idle-startup resource://gre/modules/psm/RemoteSecuritySettings.sys.mjs RemoteSecuritySettings.init
+ category browser-idle-startup moz-src:///browser/components/tabbrowser/TabUnloader.sys.mjs TabUnloader.init
+ category browser-idle-startup resource:///modules/GenAI.sys.mjs GenAI.init
+diff --git a/browser/modules/DuckstepsReleaseCheck.sys.mjs b/browser/modules/DuckstepsReleaseCheck.sys.mjs
+new file mode 100644
+index 000000000000..ec2942e4ad16
+--- /dev/null
++++ b/browser/modules/DuckstepsReleaseCheck.sys.mjs
+@@ -0,0 +1,233 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++const lazy = {};
++
++ChromeUtils.defineESModuleGetters(lazy, {
++  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
++  clearTimeout: "resource://gre/modules/Timer.sys.mjs",
++  setTimeout: "resource://gre/modules/Timer.sys.mjs",
++});
++
++const PREF_ENABLED = "ducksteps.releasecheck.enabled";
++const PREF_URL = "ducksteps.releasecheck.url";
++const PREF_LAST_CHECK = "ducksteps.releasecheck.lastCheck";
++const PREF_LATEST = "ducksteps.releasecheck.latestVersion";
++const PREF_DISMISSED = "ducksteps.releasecheck.dismissedVersion";
++
++const RELEASE_PAGE_BASE =
++  "https://github.com/SyntaxError-PEBKAC/ducksteps/releases/tag/";
++const NOTIFICATION_ID = "ducksteps-new-release";
++
++const CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
++const RETRY_INTERVAL_MS = 60 * 60 * 1000;
++const FETCH_TIMEOUT_MS = 10 * 1000;
++const MAX_RESPONSE_CHARS = 1000000;
++
++const VERSION_PATTERN = /^\d{1,4}(?:\.\d{1,4}){1,3}$/;
++const LOCAL_TEST_HOSTS = ["localhost", "127.0.0.1"];
++
++function isAllowedApiUrl(spec) {
++  try {
++    let uri = Services.io.newURI(spec);
++    return (
++      uri.scheme == "https" ||
++      (uri.scheme == "http" && LOCAL_TEST_HOSTS.includes(uri.host))
++    );
++  } catch (ex) {
++    return false;
++  }
++}
++
++/**
++ * Tells the user when a newer ducksteps release has been published on GitHub.
++ * It only reads the version number of the latest release and links to that
++ * release's page on the ducksteps repository. It never downloads or installs
++ * anything.
++ */
++export const DuckstepsReleaseCheck = {
++  _timer: null,
++  _pending: null,
++
++  get enabled() {
++    return Services.prefs.getBoolPref(PREF_ENABLED, true);
++  },
++
++  init() {
++    if (!this.enabled) {
++      return;
++    }
++    this.notifyIfNewer();
++    let last = Number(Services.prefs.getStringPref(PREF_LAST_CHECK, "0"));
++    let now = Date.now();
++    if (!Number.isFinite(last) || last > now) {
++      last = 0;
++    }
++    this._schedule(Math.max(0, last + CHECK_INTERVAL_MS - now));
++  },
++
++  _schedule(delayMs) {
++    lazy.clearTimeout(this._timer);
++    this._timer = lazy.setTimeout(async () => {
++      let version = await this.check();
++      this._schedule(version ? CHECK_INTERVAL_MS : RETRY_INTERVAL_MS);
++    }, delayMs);
++  },
++
++  /**
++   * Fetches the latest release version and stores it in prefs.
++   *
++   * @param {object} [options]
++   * @param {boolean} [options.notify=true]
++   *   Show the notification bar if the release is newer than this build.
++   * @returns {Promise<string|null>}
++   *   The latest published version, or null if the check did not succeed.
++   */
++  async check({ notify = true } = {}) {
++    if (!this.enabled || Services.io.offline) {
++      return null;
++    }
++    this._pending ??= this._fetchLatest().finally(() => {
++      this._pending = null;
++    });
++    let version = await this._pending;
++    if (version && notify) {
++      this.notifyIfNewer();
++    }
++    return version;
++  },
++
++  async _fetchLatest() {
++    let url = Services.prefs.getStringPref(PREF_URL, "");
++    if (!isAllowedApiUrl(url)) {
++      return null;
++    }
++
++    let controller = new AbortController();
++    let timer = lazy.setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
++    try {
++      let response = await fetch(url, {
++        credentials: "omit",
++        cache: "no-store",
++        referrerPolicy: "no-referrer",
++        headers: { Accept: "application/vnd.github+json" },
++        signal: controller.signal,
++      });
++      if (!response.ok || !isAllowedApiUrl(response.url)) {
++        return null;
++      }
++      let text = await response.text();
++      if (text.length > MAX_RESPONSE_CHARS) {
++        return null;
++      }
++      let data = JSON.parse(text);
++      let version = data?.tag_name;
++      if (
++        typeof version != "string" ||
++        !VERSION_PATTERN.test(version) ||
++        data.draft ||
++        data.prerelease
++      ) {
++        return null;
++      }
++      Services.prefs.setStringPref(PREF_LATEST, version);
++      Services.prefs.setStringPref(PREF_LAST_CHECK, String(Date.now()));
++      return version;
++    } catch (ex) {
++      console.warn("ducksteps release check failed:", ex);
++      return null;
++    } finally {
++      lazy.clearTimeout(timer);
++    }
++  },
++
++  /**
++   * @returns {string|null}
++   *   The newest known version if it is newer than the running build.
++   */
++  getAvailableVersion() {
++    let latest = Services.prefs.getStringPref(PREF_LATEST, "");
++    if (!VERSION_PATTERN.test(latest)) {
++      return null;
++    }
++    return Services.vc.compare(latest, Services.appinfo.version) > 0
++      ? latest
++      : null;
++  },
++
++  getReleaseUrl(version) {
++    return VERSION_PATTERN.test(version) ? RELEASE_PAGE_BASE + version : null;
++  },
++
++  /**
++   * Runs a fresh check for the About dialog.
++   *
++   * @returns {Promise<{state: string, version?: string, url?: string}>}
++   *   state is "available", "current", "unknown" or "disabled".
++   */
++  async getStatus() {
++    if (!this.enabled) {
++      return { state: "disabled" };
++    }
++    let latest = await this.check({ notify: false });
++    let available = this.getAvailableVersion();
++    if (available) {
++      return {
++        state: "available",
++        version: available,
++        url: this.getReleaseUrl(available),
++      };
++    }
++    return { state: latest ? "current" : "unknown" };
++  },
++
++  async notifyIfNewer() {
++    let version = this.getAvailableVersion();
++    if (
++      !version ||
++      Services.prefs.getStringPref(PREF_DISMISSED, "") == version
++    ) {
++      return;
++    }
++    let win = lazy.BrowserWindowTracker.getTopWindow();
++    if (!win?.gNotificationBox) {
++      return;
++    }
++
++    let existing =
++      win.gNotificationBox.getNotificationWithValue(NOTIFICATION_ID);
++    if (existing) {
++      win.gNotificationBox.removeNotification(existing, true);
++    }
++
++    let dismiss = () => Services.prefs.setStringPref(PREF_DISMISSED, version);
++    await win.gNotificationBox.appendNotification(
++      NOTIFICATION_ID,
++      {
++        label: `ducksteps ${version} is available.`,
++        priority: win.gNotificationBox.PRIORITY_INFO_MEDIUM,
++        eventCallback(event) {
++          if (event == "dismissed") {
++            dismiss();
++          }
++        },
++      },
++      [
++        {
++          label: "Download",
++          accessKey: "D",
++          primary: true,
++          callback: () => {
++            win.openTrustedLinkIn(this.getReleaseUrl(version), "tab");
++          },
++        },
++        {
++          label: "Not now",
++          accessKey: "N",
++          callback: dismiss,
++        },
++      ]
++    );
++  },
++};
+diff --git a/browser/modules/moz.build b/browser/modules/moz.build
+index 5660bf5ff933..1736dc8d2e13 100644
+--- a/browser/modules/moz.build
++++ b/browser/modules/moz.build
+@@ -120,6 +120,7 @@ EXTRA_JS_MODULES += [
+     "ContentCrashHandlers.sys.mjs",
+     "Dedupe.sys.mjs",
+     "Discovery.sys.mjs",
++    "DuckstepsReleaseCheck.sys.mjs",
+     "EveryWindow.sys.mjs",
+     "ExtensionsUI.sys.mjs",
+     "FaviconLoader.sys.mjs",
+-- 
+2.49.0.windows.1
+

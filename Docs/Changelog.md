@@ -4,6 +4,22 @@ All releases of ducksteps. Newest first.
 
 ---
 
+## [153.8.0] (25/November/2026)
+
+⛐ It's the "Ding! Fresh Duck" release!
+
+🔄 Updated to Firefox ESR 153.8.0.
+
+🔔 Added a built-in release notifier. Once a day, ducksteps asks GitHub whether a newer release exists (one anonymous request, no cookies, no personal data). If there is one, a bar appears at the top of the window: click it, grab the new installer (or Standalone .7z) from the release page, run it, and carry on laughing at memes. Nothing downloads or installs on its own, since the Firefox updater is still compiled out. Don't want it? Set `ducksteps.releasecheck.enabled` to `false` in `about:config`.
+
+🔒 Enabled immutable releases. From now on, a published release's files and tag are locked, and GitHub attaches a signed attestation. Along with the hashes below, the VirusTotal links, and my signed commits and tags, that lets you confirm the file you downloaded is the one I published. How to check, step by step, plus what still isn't covered (the installers aren't code-signed): [Security.md](https://github.com/SyntaxError-PEBKAC/ducksteps/blob/main/Docs/Security.md).
+
+🛡️ Addressed 85 CVEs from [Mozilla Foundation Security Advisory 2026-133](https://www.mozilla.org/en-US/security/advisories/mfsa2026-133/) (November 24, 2026).
+
+🙏 Thanks to Jörg Knobloch, whose [Betterbird](https://www.betterbird.eu/) update notice inspired the new notifier (and thanks for Betterbird itself!), and to [ioc2e3](https://github.com/ioc2e3), whose report in #22 (antivirus flagging a download) sent me down the rabbit hole that ended at immutable releases. Immutability won't make heuristic detections go away, but it does give you a bit more certainty that the file you downloaded is the one I published.
+
+---
+
 ## [153.7.0] (11/November/2026)
 
 ⛐ It's the "Ate too much Halloween candy" release!

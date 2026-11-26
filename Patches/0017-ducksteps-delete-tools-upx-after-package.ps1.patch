@@ -1,7 +1,7 @@
-From f232baa975228b3bd8643de9fbc804d19c5c17f5 Mon Sep 17 00:00:00 2001
+From f012a36f54e87498328b47762d32fcf0481b37f8 Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Sat, 15 Aug 2026 19:53:08 -0700
-Subject: [PATCH 17/22] ducksteps: delete tools/upx-after-package.ps1
+Subject: [PATCH 17/23] ducksteps: delete tools/upx-after-package.ps1
 
 Dead code, and a trap. Nothing calls it: not package.sh, not the release
 automation, not the docs. Meanwhile the patch stack carries "remove UPX

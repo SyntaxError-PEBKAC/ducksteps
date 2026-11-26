@@ -1,11 +1,11 @@
 # ducksteps patch stack
 
-These are the commits that turn a stock Firefox ESR checkout into ducksteps: exported with `git format-patch` from the `esr153` branch, applied on top of upstream Mozilla commit `9aecd40e03eb` (see [`../Docs/Building.md`](../Docs/Building.md) for the full build workflow).
+These are the commits that turn a stock Firefox ESR checkout into ducksteps: exported with `git format-patch` from the `esr153` branch, applied on top of upstream Mozilla commit `7a005ddca7c1` (see [`../Docs/Building.md`](../Docs/Building.md) for the full build workflow).
 
 To use them: clone [mozilla-firefox/firefox](https://github.com/mozilla-firefox/firefox), check out the matching ESR branch/tag, then apply in order:
 
 ```bash
-git am --keep-cr Patches/0001-ducksteps-branding-patchset.patch Patches/0002-Custom-PGO-training-replace-Mozilla-default-workload.patch ... Patches/0022-ducksteps-track-build-files-that-were-never-committe.patch
+git am --keep-cr Patches/0001-ducksteps-branding-patchset.patch Patches/0002-Custom-PGO-training-replace-Mozilla-default-workload.patch ... Patches/0023-ducksteps-notify-when-a-newer-release-is-published.patch
 ```
 
 or all at once:
@@ -40,3 +40,4 @@ Numbered in the order they were originally committed:
 20. `ducksteps: replace the About dialog's flat purple with a space backdrop`
 21. `ducksteps: fade the logo's edges instead of cutting it off square`
 22. `ducksteps: track build files that were never committed`
+23. `ducksteps: notify when a newer release is published`

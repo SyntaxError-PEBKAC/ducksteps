@@ -1,7 +1,7 @@
-From 3a8a9b80608a3b622b9405afb6d7dde54e8f153f Mon Sep 17 00:00:00 2001
+From ba4e9754633cb141b757376db53155e58d1442e4 Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Wed, 6 May 2026 09:59:06 -0700
-Subject: [PATCH 08/22] ducksteps PGO: remove video fullscreen, Speedometer
+Subject: [PATCH 08/23] ducksteps PGO: remove video fullscreen, Speedometer
  dwell -15s, corpus tweaks
 
 ---

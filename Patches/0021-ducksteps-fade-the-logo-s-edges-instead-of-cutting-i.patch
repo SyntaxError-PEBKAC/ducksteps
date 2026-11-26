@@ -1,7 +1,7 @@
-From 219e10f645013f9627e3542b674a7d5ab34803b5 Mon Sep 17 00:00:00 2001
+From c590fd45961d8590ef85178e75582c4550c6a925 Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Mon, 31 Aug 2026 15:06:49 -0700
-Subject: [PATCH 21/22] ducksteps: fade the logo's edges instead of cutting it
+Subject: [PATCH 21/23] ducksteps: fade the logo's edges instead of cutting it
  off square
 
 The logo artwork runs straight off its own frame. On about-logo@2x.png

@@ -1,7 +1,7 @@
-From f049d5eb6d0e6e7f16e9dcaabde31579da734840 Mon Sep 17 00:00:00 2001
+From 505a5b216172a76a3ff59b7397ed5b1456dd8ace Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Mon, 31 Aug 2026 15:25:51 -0700
-Subject: [PATCH 22/22] ducksteps: track build files that were never committed
+Subject: [PATCH 22/23] ducksteps: track build files that were never committed
 
 Four files the build depends on existed only in the working tree. None
 was covered by .gitignore, and git log --all shows none of them was ever

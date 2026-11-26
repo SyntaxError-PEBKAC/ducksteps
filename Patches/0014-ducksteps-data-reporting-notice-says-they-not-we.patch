@@ -1,7 +1,7 @@
-From cf378406f0fd49f407f7bfcc07b76ae0b8d38f83 Mon Sep 17 00:00:00 2001
+From bf1a94d5e3f2a971162bfd6edffe7189fa00d4c9 Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Sat, 15 Aug 2026 19:46:57 -0700
-Subject: [PATCH 14/22] ducksteps: data reporting notice says "they", not "we"
+Subject: [PATCH 14/23] ducksteps: data reporting notice says "they", not "we"
 
 Upstream writes "so that we can improve your experience", which works
 when the vendor collecting the data and the vendor shipping the browser

@@ -65,7 +65,7 @@ Grab the correct installer or standalone ZIP from the Releases page.
 `ducksteps.X.X.X.Legacy.Standalone.7z` — Portable for older PCs — extract and run, no installation
 
 
-SHA512 hashes and VirusTotal results are included with every release.
+SHA512 hashes and VirusTotal results are included with every release. How to check a download, and what protects each release: [Security.md](Docs/Security.md).
 
 ---
 🔔 Update notifications

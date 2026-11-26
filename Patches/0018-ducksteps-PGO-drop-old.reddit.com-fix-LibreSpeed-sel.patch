@@ -1,7 +1,7 @@
-From e6689844508d7e545bfee5bbadbe862858c260fc Mon Sep 17 00:00:00 2001
+From ac2c61b7d71b13efd72e71c26f7024327ff2e4cf Mon Sep 17 00:00:00 2001
 From: Tim <107831991+SyntaxError-PEBKAC@users.noreply.github.com>
 Date: Wed, 19 Aug 2026 13:28:11 -0700
-Subject: [PATCH 18/22] ducksteps PGO: drop old.reddit.com, fix LibreSpeed
+Subject: [PATCH 18/23] ducksteps PGO: drop old.reddit.com, fix LibreSpeed
  self-abort
 
 old.reddit.com now requires login to view anything, so it stopped
