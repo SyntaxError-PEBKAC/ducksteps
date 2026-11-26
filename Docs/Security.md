@@ -44,6 +44,8 @@ If any check doesn't match, don't run the file. Open an issue, or use the privat
 
 - **Signed commits.** My commits to this repository have been SSH-signed since September 2026. Commits made in GitHub's web editor are signed by GitHub. Both show as Verified.
 - **Signed tags.** See check 5 above.
+- **Vigilant mode is on.** Any commit attributed to me that I didn't sign shows as Unverified, so a commit faked under my name stands out.
+- **Protected tags and branch.** Repository rules stop any release tag from being moved or deleted, and stop `main` from being deleted or force-pushed (rewriting history).
 - **Patch stack.** Each release tag points at the commit holding the patches (`Patches/`) used for that build, so every change on top of Mozilla's source can be inspected.
 - **Open automation.** The scripts that build, hash, scan, and publish releases are in `Automation/`, minus the file holding their credentials.
 
@@ -59,6 +61,7 @@ If any check doesn't match, don't run the file. Open an issue, or use the privat
 - Two-factor authentication is on for the maintainer account (authenticator app and passkey; no SMS).
 - Secret scanning and push protection are on, so credentials can't be pushed by accident.
 - Private vulnerability reporting is on.
+- GitHub Actions is turned off for this repository, since nothing here runs on GitHub's servers.
 
 ### Built-in browser features
 
@@ -69,7 +72,7 @@ If any check doesn't match, don't run the file. Open an issue, or use the privat
 
 - **The installers aren't code-signed (no Authenticode certificate).** Windows SmartScreen and some antivirus heuristics may warn about new, unsigned files. The checks above prove a file is the one I published, not that Windows will trust it.
 - **Builds aren't reproducible**, and there has been no independent security audit.
-- **Some older commits are unsigned.** 26 commits from before September 2026 predate signing. I didn't rewrite history to sign them, because that would move every tag and break existing clones.
+- **Some older commits are unsigned.** 26 commits from before September 2026 predate signing, and GitHub marks them Unverified. I didn't rewrite history to sign them, because that would move every tag and break existing clones.
 - **ducksteps follows Firefox ESR.** Security fixes come from Mozilla; each release's notes link the advisory it addresses.
 - **One maintainer.** Reports are handled on a best-effort basis, with no guaranteed response time.
 
