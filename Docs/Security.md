@@ -66,7 +66,7 @@ If any check doesn't match, don't run the file. Open an issue, or use the privat
 ### Built-in browser features
 
 - The Firefox updater, maintenance service, default-browser agent, and crash reporter are compiled out.
-- **Release check:** once a day, ducksteps asks `api.github.com` for the newest published version number. It is one anonymous request, with no cookies and no personal data. If a newer version exists, a bar appears with a link to that release's page; nothing is downloaded or installed automatically. To turn it off, set `ducksteps.releasecheck.enabled` to `false` in `about:config`.
+- **Release check:** once a day, ducksteps asks `api.github.com` for the newest published version number. It is one anonymous request: no cookies, no referrer, and no account. Like any web request, it shows GitHub your IP address and browser version; GitHub doesn't pass any of that on to me. If a newer version exists, a bar appears at the top of the window and the About dialog shows a Download link to that release's page; nothing is downloaded or installed automatically. To turn it off, set `ducksteps.releasecheck.enabled` to `false` in `about:config`.
 
 ## Known limitations
 
